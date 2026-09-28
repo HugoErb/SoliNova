@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -310,6 +311,7 @@ class _Hud extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(gameProvider.select((g) => g.session));
+    final dealSerial = ref.watch(gameProvider.select((g) => g.dealSerial));
     final settings = ref.watch(settingsProvider);
     final controller = ref.read(gameProvider.notifier);
     final scheme = Theme.of(context).colorScheme;
@@ -360,8 +362,9 @@ class _Hud extends ConsumerWidget {
                       if (settings.showScore)
                         stat(
                           'Score',
-                          Text(
-                            formatNumber(controller.liveScore),
+                          _ScoreCounter(
+                            key: ValueKey(dealSerial),
+                            score: controller.liveScore,
                             style: numStyle,
                           ),
                         ),
@@ -381,6 +384,94 @@ class _Hud extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Score en direct : à chaque variation, le nombre pulse et l'écart
+/// (« −20 », « +10 ») s'élève puis s'efface au-dessus du compteur.
+class _ScoreCounter extends ConsumerStatefulWidget {
+  const _ScoreCounter({super.key, required this.score, required this.style});
+
+  final int score;
+  final TextStyle style;
+
+  @override
+  ConsumerState<_ScoreCounter> createState() => _ScoreCounterState();
+}
+
+class _ScoreCounterState extends ConsumerState<_ScoreCounter>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  );
+  int _delta = 0;
+
+  @override
+  void didUpdateWidget(_ScoreCounter old) {
+    super.didUpdateWidget(old);
+    final delta = widget.score - old.score;
+    if (delta == 0 || !ref.read(lookProvider).animationsEnabled) return;
+    _delta = delta;
+    _c.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final text = Text(formatNumber(widget.score), style: widget.style);
+    return AnimatedBuilder(
+      animation: _c,
+      child: text,
+      builder: (context, child) {
+        final t = _c.value;
+        if (!_c.isAnimating) return child!;
+        final color = _delta < 0 ? scheme.error : scheme.primary;
+        // Pulsation courte du nombre, écart qui monte et s'efface.
+        final pulse = 1 + 0.18 * math.sin(math.min(t * 3, 1) * math.pi);
+        return Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            Transform.scale(
+              scale: pulse,
+              child: Text(
+                formatNumber(widget.score),
+                style: widget.style.copyWith(
+                  color: Color.lerp(
+                    color,
+                    DefaultTextStyle.of(context).style.color,
+                    Curves.easeIn.transform(t),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 14 + 16 * Curves.easeOut.transform(t),
+              child: IgnorePointer(
+                child: Opacity(
+                  opacity: 1 - Curves.easeIn.transform(t),
+                  child: Text(
+                    _delta > 0 ? '+$_delta' : '−${-_delta}',
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -533,7 +624,6 @@ class _ActionBar extends ConsumerWidget {
             child: _ActionButton(
               icon: Icons.lightbulb_outline_rounded,
               label: 'Indice (${ScoreCalculator.hintCost} points)',
-              cost: ScoreCalculator.hintCost,
               busy: game.thinking == Assist.hint,
               onTap: canAssist ? controller.hint : null,
             ),
@@ -543,7 +633,6 @@ class _ActionBar extends ConsumerWidget {
               icon: Icons.auto_fix_high_rounded,
               label:
                   'Jouer le meilleur coup (${ScoreCalculator.assistedMoveCost} points)',
-              cost: ScoreCalculator.assistedMoveCost,
               busy: game.thinking == Assist.play,
               onTap: canAssist
                   ? () {
@@ -587,7 +676,6 @@ class _ActionButton extends StatelessWidget {
     required this.label,
     required this.onTap,
     this.highlight,
-    this.cost,
     this.busy = false,
   });
 
@@ -595,7 +683,6 @@ class _ActionButton extends StatelessWidget {
   final String label;
   final VoidCallback? onTap;
   final Color? highlight;
-  final int? cost;
 
   /// Recherche en cours : la roue remplace l'icône.
   final bool busy;
@@ -626,60 +713,21 @@ class _ActionButton extends StatelessWidget {
                 onTap: onTap,
                 child: SizedBox(
                   height: 52,
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    alignment: Alignment.center,
-                    children: [
-                      if (busy)
-                        SizedBox.square(
-                          dimension: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            color: scheme.primary,
-                          ),
-                        )
-                      else
-                        Icon(icon, color: fg, size: 26),
-                      if (cost != null)
-                        Positioned(
-                          top: 5,
-                          right: 6,
-                          child: _CostBadge(cost: cost!),
-                        ),
-                    ],
+                  child: Center(
+                    child: busy
+                        ? SizedBox.square(
+                            dimension: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: scheme.primary,
+                            ),
+                          )
+                        : Icon(icon, color: fg, size: 26),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Coût en points d'une aide, affiché en coin du bouton.
-class _CostBadge extends StatelessWidget {
-  const _CostBadge({required this.cost});
-
-  final int cost;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-      decoration: BoxDecoration(
-        color: scheme.tertiaryContainer,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        '−$cost',
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w800,
-          color: scheme.onTertiaryContainer,
-          height: 1.2,
         ),
       ),
     );
