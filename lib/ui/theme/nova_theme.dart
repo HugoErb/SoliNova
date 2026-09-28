@@ -83,6 +83,7 @@ final class NovaTheme {
     required this.highlight,
     required this.danger,
     this.animatedTable = false,
+    this.snowfall = false,
     this.variantId,
   });
 
@@ -109,6 +110,9 @@ final class NovaTheme {
 
   /// Tapis au dégradé animé (thème Aurore).
   final bool animatedTable;
+
+  /// Petite neige qui tombe sur le tapis (thème Noël).
+  final bool snowfall;
 
   /// Identifiant de la variante claire/sombre, si le thème en possède une.
   final String? variantId;
@@ -642,6 +646,7 @@ abstract final class ThemeCatalog {
     slot: Color(0x33FFFFFF),
     highlight: Color(0xFFFFD86B),
     danger: Color(0xFFFF7A7A),
+    snowfall: true,
   );
 
   static const halloween = NovaTheme(

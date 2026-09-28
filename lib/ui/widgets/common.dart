@@ -75,7 +75,7 @@ class _TableBackgroundState extends ConsumerState<TableBackground>
     } else if (!animated && _c.isAnimating) {
       _c.stop();
     }
-    return RepaintBoundary(
+    final table = RepaintBoundary(
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 450),
         child: AnimatedBuilder(
@@ -92,7 +92,102 @@ class _TableBackgroundState extends ConsumerState<TableBackground>
         ),
       ),
     );
+    if (!look.theme.snowfall || !look.animationsEnabled) return table;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        table,
+        const IgnorePointer(child: RepaintBoundary(child: _Snowfall())),
+      ],
+    );
   }
+}
+
+/// Neige légère : flocons aux paramètres fixes, position calculée à partir
+/// du temps écoulé pour rester fluide sans état par flocon.
+class _Snowfall extends StatefulWidget {
+  const _Snowfall();
+
+  @override
+  State<_Snowfall> createState() => _SnowfallState();
+}
+
+class _SnowfallState extends State<_Snowfall>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 60),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      CustomPaint(painter: _SnowPainter(_c), size: Size.infinite);
+}
+
+final class _Flake {
+  const _Flake(
+    this.x,
+    this.offset,
+    this.speed,
+    this.radius,
+    this.sway,
+    this.alpha,
+  );
+
+  final double x;
+  final double offset;
+
+  /// Hauteurs d'écran parcourues par minute.
+  final double speed;
+  final double radius;
+  final double sway;
+  final double alpha;
+}
+
+class _SnowPainter extends CustomPainter {
+  _SnowPainter(this.time) : super(repaint: time);
+
+  final Animation<double> time;
+
+  static final List<_Flake> _flakes = () {
+    final rnd = math.Random(12);
+    return [
+      for (var i = 0; i < 46; i++)
+        _Flake(
+          rnd.nextDouble(),
+          rnd.nextDouble(),
+          // Entier pour que la boucle de 60 s reste sans saut.
+          4.0 + rnd.nextInt(5),
+          0.9 + rnd.nextDouble() * 1.8,
+          6 + rnd.nextDouble() * 14,
+          0.25 + rnd.nextDouble() * 0.45,
+        ),
+    ];
+  }();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final t = time.value;
+    final paint = Paint();
+    final span = size.height + 20;
+    for (final f in _flakes) {
+      final y = ((f.offset + t * f.speed) % 1) * span - 10;
+      final x =
+          f.x * size.width +
+          math.sin((t * f.speed + f.offset) * math.pi * 2) * f.sway;
+      paint.color = Colors.white.withValues(alpha: f.alpha);
+      canvas.drawCircle(Offset(x, y), f.radius, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_SnowPainter old) => false;
 }
 
 class _TablePainter extends CustomPainter {
@@ -127,15 +222,17 @@ class _TablePainter extends CustomPainter {
           ..shader = RadialGradient(
             center: Alignment(math.cos(a) * 0.7, 0.6 + math.sin(a) * 0.2),
             radius: 0.9,
-            colors: [accent.withValues(alpha: 0.18), accent.withValues(alpha: 0)],
+            colors: [
+              accent.withValues(alpha: 0.18),
+              accent.withValues(alpha: 0),
+            ],
           ).createShader(rect),
       );
     }
     final ink = Paint()
-      ..color = (style.center.computeLuminance() > 0.5
-              ? Colors.black
-              : Colors.white)
-          .withValues(alpha: style.patternOpacity);
+      ..color =
+          (style.center.computeLuminance() > 0.5 ? Colors.black : Colors.white)
+              .withValues(alpha: style.patternOpacity);
     switch (style.pattern) {
       case TablePattern.none:
         break;
@@ -190,18 +287,19 @@ class _TablePainter extends CustomPainter {
   /// (fixe, pour que le tapis ne change pas d'un affichage à l'autre).
   void _paintMotifs(Canvas canvas, Size size, Motif motif) {
     final paint = Paint()
-      ..color = (style.center.computeLuminance() > 0.5
-              ? Colors.black
-              : Colors.white)
-          .withValues(alpha: style.motifOpacity);
+      ..color =
+          (style.center.computeLuminance() > 0.5 ? Colors.black : Colors.white)
+              .withValues(alpha: style.motifOpacity);
     final rnd = math.Random(7);
     const step = 96.0;
     const side = 26.0;
     var row = 0;
     for (var y = step * 0.4; y < size.height + step; y += step * 0.75, row++) {
-      for (var x = row.isEven ? step * 0.3 : step * 0.8;
-          x < size.width + step;
-          x += step) {
+      for (
+        var x = row.isEven ? step * 0.3 : step * 0.8;
+        x < size.width + step;
+        x += step
+      ) {
         final center = Offset(
           x + (rnd.nextDouble() - 0.5) * step * 0.3,
           y + (rnd.nextDouble() - 0.5) * step * 0.3,
@@ -233,10 +331,7 @@ class NovaStar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = color ?? Theme.of(context).colorScheme.primary;
-    return CustomPaint(
-      size: Size.square(size),
-      painter: _StarPainter(c),
-    );
+    return CustomPaint(size: Size.square(size), painter: _StarPainter(c));
   }
 }
 
@@ -470,7 +565,12 @@ class SectionTitle extends StatelessWidget {
 
 /// Barre de progression arrondie.
 class ProgressBar extends StatelessWidget {
-  const ProgressBar({super.key, required this.value, this.height = 8, this.color});
+  const ProgressBar({
+    super.key,
+    required this.value,
+    this.height = 8,
+    this.color,
+  });
 
   final double value;
   final double height;

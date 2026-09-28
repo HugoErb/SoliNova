@@ -385,7 +385,7 @@ class _Hud extends ConsumerWidget {
   }
 }
 
-/// Actions principales en bas de l'écran.
+/// Explication de l'indice, posée sur le bas du plateau.
 class _HintBanner extends StatelessWidget {
   const _HintBanner({required this.hint, required this.onClose});
 
@@ -394,46 +394,98 @@ class _HintBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final advice = hint.advice;
     final points = advice.points;
+    Widget chip(String text, Color bg, Color fg) => Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: fg),
+      ),
+    );
     return Material(
-      elevation: 6,
-      color: Theme.of(context).colorScheme.surfaceContainerHigh,
-      borderRadius: BorderRadius.circular(16),
+      elevation: 8,
+      color: scheme.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(18),
       clipBehavior: Clip.antiAlias,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 4, 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Semantics(
-                liveRegion: true,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      advice.instruction,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(advice.reason),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Coup : ${points > 0 ? '+' : ''}$points pts · '
-                      'Indice : −${ScoreCalculator.hintCost} pts',
-                    ),
-                  ],
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(left: BorderSide(color: scheme.primary, width: 4)),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(12, 10, 4, 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Icon(
+                  Icons.lightbulb_rounded,
+                  color: scheme.primary,
+                  size: 22,
                 ),
               ),
-            ),
-            IconButton(
-              tooltip: "Fermer l'indice",
-              onPressed: onClose,
-              icon: const Icon(Icons.close_rounded),
-            ),
-          ],
+              const SizedBox(width: 10),
+              Expanded(
+                child: Semantics(
+                  liveRegion: true,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        advice.instruction,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14.5,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        advice.reason,
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          chip(
+                            'Coup ${points >= 0 ? '+' : '−'}${points.abs()} pts',
+                            points > 0
+                                ? scheme.primaryContainer
+                                : scheme.surfaceContainerHigh,
+                            points > 0
+                                ? scheme.onPrimaryContainer
+                                : scheme.onSurface,
+                          ),
+                          chip(
+                            'Indice −${ScoreCalculator.hintCost} pts',
+                            scheme.tertiaryContainer,
+                            scheme.onTertiaryContainer,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: "Fermer l'indice",
+                onPressed: onClose,
+                visualDensity: VisualDensity.compact,
+                icon: const Icon(Icons.close_rounded),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -471,6 +523,7 @@ class _ActionBar extends ConsumerWidget {
             child: _ActionButton(
               icon: Icons.lightbulb_outline_rounded,
               label: 'Indice (${ScoreCalculator.hintCost} points)',
+              cost: ScoreCalculator.hintCost,
               onTap: canAssist ? controller.hint : null,
             ),
           ),
@@ -479,6 +532,7 @@ class _ActionBar extends ConsumerWidget {
               icon: Icons.auto_fix_high_rounded,
               label:
                   'Jouer le meilleur coup (${ScoreCalculator.assistedMoveCost} points)',
+              cost: ScoreCalculator.assistedMoveCost,
               onTap: canAssist
                   ? () {
                       ScaffoldMessenger.of(context)
@@ -521,24 +575,88 @@ class _ActionButton extends StatelessWidget {
     required this.label,
     required this.onTap,
     this.highlight,
+    this.cost,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
   final Color? highlight;
+  final int? cost;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final fg = highlight ?? scheme.onSurface;
-    return IconButton(
-      tooltip: label,
-      onPressed: onTap,
-      color: fg,
-      disabledColor: fg.withValues(alpha: 0.35),
-      constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
-      icon: Icon(icon, size: 26),
+    final enabled = onTap != null;
+    final bg = highlight ?? scheme.surfaceContainerHigh;
+    final fg = highlight != null ? scheme.onPrimary : scheme.onSurface;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Tooltip(
+        message: label,
+        child: Semantics(
+          button: true,
+          enabled: enabled,
+          label: label,
+          excludeSemantics: true,
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 200),
+            opacity: enabled ? 1 : 0.4,
+            child: Material(
+              color: bg,
+              borderRadius: BorderRadius.circular(16),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: onTap,
+                child: SizedBox(
+                  height: 52,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.center,
+                    children: [
+                      Icon(icon, color: fg, size: 26),
+                      if (cost != null)
+                        Positioned(
+                          top: 5,
+                          right: 6,
+                          child: _CostBadge(cost: cost!),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Coût en points d'une aide, affiché en coin du bouton.
+class _CostBadge extends StatelessWidget {
+  const _CostBadge({required this.cost});
+
+  final int cost;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      decoration: BoxDecoration(
+        color: scheme.tertiaryContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        '−$cost',
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          color: scheme.onTertiaryContainer,
+          height: 1.2,
+        ),
+      ),
     );
   }
 }
