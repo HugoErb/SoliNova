@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/game_controller.dart';
 import '../../app/providers.dart';
+import '../../engine/model/game_mode.dart';
 import '../../meta/daily/daily_challenge.dart';
 import '../game/game_screen.dart';
 import '../widgets/common.dart';
@@ -119,7 +120,9 @@ class PlayTab extends ConsumerWidget {
     final session = game.session;
     final resumable = session != null && game.report == null;
     final scheme = Theme.of(context).colorScheme;
-    final today = DailyChallengeGenerator.forDay(DateTime.now());
+    final now = DateTime.now();
+    final today = DailyChallengeGenerator.forDay(now);
+    final date = DailyChallengeGenerator.dateKey(now);
     final dailies = ref.watch(profileProvider.select((p) => p.dailies));
 
     return ListView(
@@ -225,25 +228,30 @@ class PlayTab extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Column(
             children: [
-              for (final c in today)
+              for (final mode in GameMode.values)
                 ListTile(
-                  onTap: () => startGame(
-                    context,
-                    ref,
-                    () => ref.read(gameProvider.notifier).startChallenge(c),
-                  ),
-                  leading: _StatusDot(status: dailies.of(c.id).status),
+                  onTap: () {
+                    ref.read(challengeModeProvider.notifier).select(mode);
+                    onOpenTab(1);
+                  },
                   title: Text(
-                    c.difficulty.label,
+                    mode.fullName,
                     style: const TextStyle(fontWeight: FontWeight.w800),
                   ),
                   subtitle: Text(
-                    '${c.mode.fullName}\n${c.objective.describe()}',
+                    '${dailies.succeededOn(date, mode)} / 3 réussis',
                   ),
-                  isThreeLine: true,
-                  trailing: Icon(
-                    Icons.chevron_right_rounded,
-                    color: scheme.onSurfaceVariant,
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final c in today)
+                        if (c.mode == mode)
+                          _StatusDot(status: dailies.of(c.id).status),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ],
                   ),
                 ),
             ],

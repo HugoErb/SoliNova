@@ -283,14 +283,14 @@ abstract final class AchievementCatalog {
     Achievement(
       id: 'daily_trio',
       title: 'Journée parfaite',
-      description: 'Réussir les trois défis d\'une même journée.',
+      description: 'Réussir les trois défis d\'un même mode dans la journée.',
       tier: BadgeTier.gold,
       target: 3,
       measure: (c) {
-        final r = c.lastResult;
-        final id = r?.challengeId;
-        if (id == null) return 0;
-        return c.dailies.succeededOn(id.substring(0, 10));
+        final id = c.lastResult?.challengeId;
+        final challenge = id == null ? null : DailyChallengeGenerator.byId(id);
+        if (challenge == null) return 0;
+        return c.dailies.succeededOn(challenge.date, challenge.mode);
       },
       rewardXp: 150,
       rewardPoints: 150,

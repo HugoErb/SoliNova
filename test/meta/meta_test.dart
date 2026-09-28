@@ -173,14 +173,22 @@ void main() {
   });
 
   group('Défis quotidiens', () {
-    test('trois défis par jour, identiques toute la journée', () {
+    test('trois défis par mode et par jour, identiques toute la journée', () {
       final morning = DailyChallengeGenerator.forDay(DateTime(2026, 9, 27, 7));
       final evening = DailyChallengeGenerator.forDay(DateTime(2026, 9, 27, 23));
-      expect(morning.length, 3);
-      expect([
-        for (final c in morning) c.difficulty,
-      ], ChallengeDifficulty.values);
-      for (var i = 0; i < 3; i++) {
+      expect(morning.length, GameMode.values.length * 3);
+      expect(morning.map((c) => c.id).toSet().length, morning.length);
+      for (final mode in GameMode.values) {
+        final ofMode = DailyChallengeGenerator.forDayAndMode(
+          DateTime(2026, 9, 27),
+          mode,
+        );
+        expect(ofMode.map((c) => c.mode).toSet(), {mode});
+        expect([
+          for (final c in ofMode) c.difficulty,
+        ], ChallengeDifficulty.values);
+      }
+      for (var i = 0; i < morning.length; i++) {
         expect(morning[i].id, evening[i].id);
         expect(morning[i].seed, evening[i].seed);
         expect(morning[i].mode, evening[i].mode);
@@ -195,6 +203,20 @@ void main() {
       final a = DailyChallengeGenerator.forDay(DateTime(2026, 9, 27));
       final b = DailyChallengeGenerator.forDay(DateTime(2026, 9, 28));
       expect(a.map((c) => c.seed), isNot(b.map((c) => c.seed)));
+    });
+
+    test('réussites comptées par jour et par mode', () {
+      final log = DailyChallengeLog({
+        '2026-09-27-spider1-easy': const ChallengeProgress(succeeded: true),
+        '2026-09-27-spider1-hard': const ChallengeProgress(succeeded: true),
+        '2026-09-27-spider2-easy': const ChallengeProgress(succeeded: true),
+        '2026-09-27-freecell-easy': const ChallengeProgress(attempts: 2),
+      });
+      expect(log.succeededOn('2026-09-27'), 3);
+      expect(log.succeededOn('2026-09-27', GameMode.spider1), 2);
+      expect(log.succeededOn('2026-09-27', GameMode.spider2), 1);
+      expect(log.succeededOn('2026-09-27', GameMode.freecell), 0);
+      expect(log.hardSucceeded(), isTrue);
     });
 
     test('byId reconstruit exactement le même défi', () {

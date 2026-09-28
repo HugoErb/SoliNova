@@ -69,7 +69,7 @@ final class DailyChallenge {
   final int seed;
   final ChallengeObjective objective;
 
-  String get id => '$date-${difficulty.name}';
+  String get id => '$date-${mode.name}-${difficulty.name}';
   int get rewardXp => difficulty.rewardXp;
   int get rewardPoints => difficulty.rewardPoints;
 }
@@ -80,26 +80,6 @@ abstract final class DailyChallengeGenerator {
       '${day.year.toString().padLeft(4, '0')}-'
       '${day.month.toString().padLeft(2, '0')}-'
       '${day.day.toString().padLeft(2, '0')}';
-
-  static const _pools = {
-    ChallengeDifficulty.easy: [
-      GameMode.klondike1,
-      GameMode.spider1,
-      GameMode.freecell,
-    ],
-    ChallengeDifficulty.medium: [
-      GameMode.klondike3,
-      GameMode.spider2,
-      GameMode.freecell,
-      GameMode.klondike1,
-    ],
-    ChallengeDifficulty.hard: [
-      GameMode.spider4,
-      GameMode.klondike3,
-      GameMode.spider2,
-      GameMode.freecell,
-    ],
-  };
 
   /// Temps limites (secondes) par mode pour les défis chronométrés.
   static const _timeLimits = {
@@ -121,33 +101,27 @@ abstract final class DailyChallengeGenerator {
     GameMode.freecell: 120,
   };
 
-  static List<DailyChallenge> forDay(DateTime day) => _forDate(dateKey(day));
+  /// Tous les défis d'une journée : trois par mode de jeu.
+  static List<DailyChallenge> forDay(DateTime day) => [
+    for (final mode in GameMode.values) ...forDayAndMode(day, mode),
+  ];
 
-  /// Les trois défis d'une date. Chaque défi utilise un mode différent des
-  /// précédents de la journée quand c'est possible.
-  static List<DailyChallenge> _forDate(String date) {
-    final used = <GameMode>{};
-    final out = <DailyChallenge>[];
-    for (final d in ChallengeDifficulty.values) {
-      final c = _make(date, d, used);
-      used.add(c.mode);
-      out.add(c);
-    }
-    return out;
-  }
+  /// Les trois défis (facile, intermédiaire, difficile) d'un mode.
+  static List<DailyChallenge> forDayAndMode(DateTime day, GameMode mode) =>
+      _forDate(dateKey(day), mode);
+
+  static List<DailyChallenge> _forDate(String date, GameMode mode) => [
+    for (final d in ChallengeDifficulty.values) _make(date, mode, d),
+  ];
 
   static DailyChallenge _make(
     String date,
+    GameMode mode,
     ChallengeDifficulty difficulty,
-    Set<GameMode> avoid,
   ) {
     final rng = SeededRandom(
-      SeededRandom.hashString('SoliNova|$date|${difficulty.name}'),
+      SeededRandom.hashString('SoliNova|$date|${mode.name}|${difficulty.name}'),
     );
-    final all = _pools[difficulty]!;
-    final fresh = all.where((m) => !avoid.contains(m)).toList();
-    final pool = fresh.isEmpty ? all : fresh;
-    final mode = pool[rng.nextInt(pool.length)];
     final objective = switch (difficulty) {
       ChallengeDifficulty.easy => const ChallengeObjective(),
       ChallengeDifficulty.medium => switch (rng.nextInt(3)) {
@@ -178,16 +152,19 @@ abstract final class DailyChallengeGenerator {
     );
   }
 
-  /// Retrouve un défi à partir de son identifiant.
+  /// Retrouve un défi à partir de son identifiant
+  /// (`AAAA-MM-JJ-mode-difficulté`).
   static DailyChallenge? byId(String id) {
-    final cut = id.lastIndexOf('-');
-    if (cut < 0) return null;
-    final date = id.substring(0, cut);
+    if (id.length < 12) return null;
+    final date = id.substring(0, 10);
+    final parts = id.substring(11).split('-');
+    if (parts.length != 2 || DateTime.tryParse(date) == null) return null;
+    final mode = GameMode.tryParse(parts[0]);
     final diff = ChallengeDifficulty.values
-        .where((d) => d.name == id.substring(cut + 1))
+        .where((d) => d.name == parts[1])
         .firstOrNull;
-    if (diff == null || DateTime.tryParse(date) == null) return null;
-    return _forDate(date)[diff.index];
+    if (mode == null || diff == null) return null;
+    return _forDate(date, mode)[diff.index];
   }
 }
 
@@ -232,8 +209,13 @@ final class DailyChallengeLog {
 
   int get totalSucceeded => entries.values.where((e) => e.succeeded).length;
 
-  int succeededOn(String date) => entries.entries
-      .where((e) => e.key.startsWith(date) && e.value.succeeded)
+  /// Défis réussis à [date], éventuellement limités à un [mode].
+  int succeededOn(String date, [GameMode? mode]) => entries.entries
+      .where(
+        (e) =>
+            e.key.startsWith(mode == null ? date : '$date-${mode.name}-') &&
+            e.value.succeeded,
+      )
       .length;
 
   bool hardSucceeded() => entries.entries.any(

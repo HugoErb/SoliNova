@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/game_controller.dart';
 import '../../app/providers.dart';
+import '../../engine/model/game_mode.dart';
 import '../../meta/daily/daily_challenge.dart';
 import '../widgets/common.dart';
 import 'new_game_sheet.dart';
@@ -43,17 +44,39 @@ String _dayLabel(DateTime d, DateTime today) {
   return label[0].toUpperCase() + label.substring(1);
 }
 
-/// Défis quotidiens : trois défis par jour, générés localement.
+/// Mode affiché dans l'onglet Défis (choisi aussi depuis l'accueil).
+final challengeModeProvider =
+    NotifierProvider<ChallengeModeController, GameMode?>(
+      ChallengeModeController.new,
+    );
+
+class ChallengeModeController extends Notifier<GameMode?> {
+  /// Null : premier mode dont un défi reste à réussir.
+  @override
+  GameMode? build() => null;
+
+  void select(GameMode mode) => state = mode;
+}
+
+/// Défis quotidiens : trois défis par mode et par jour, générés localement.
 class ChallengesTab extends ConsumerWidget {
   const ChallengesTab({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final now = DateTime.now();
-    final today = DailyChallengeGenerator.forDay(now);
     final log = ref.watch(profileProvider.select((p) => p.dailies));
     final scheme = Theme.of(context).colorScheme;
-    final done = today.where((c) => log.of(c.id).succeeded).length;
+    final date = DailyChallengeGenerator.dateKey(now);
+    int doneIn(GameMode m) => log.succeededOn(date, m);
+    final mode =
+        ref.watch(challengeModeProvider) ??
+        GameMode.values.firstWhere(
+          (m) => doneIn(m) < 3,
+          orElse: () => GameMode.values.first,
+        );
+    final today = DailyChallengeGenerator.forDayAndMode(now, mode);
+    final total = GameMode.values.length * ChallengeDifficulty.values.length;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -69,7 +92,7 @@ class ChallengesTab extends ConsumerWidget {
                 ),
               ),
               Text(
-                '$done / 3',
+                '${log.succeededOn(date)} / $total',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
@@ -80,17 +103,42 @@ class ChallengesTab extends ConsumerWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(4, 0, 4, 16),
+          padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
           child: Text(
-            'Les mêmes donnes toute la journée. Tentatives illimitées, '
-            'récompense versée à la première réussite.',
+            'Trois défis par mode, les mêmes donnes toute la journée. '
+            'Tentatives illimitées, récompense versée à la première réussite.',
             style: TextStyle(color: scheme.onSurfaceVariant),
           ),
         ),
-        for (final c in today) ...[
-          _ChallengeCard(challenge: c, progress: log.of(c.id)),
-          const SizedBox(height: 12),
-        ],
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final m in GameMode.values)
+              ChoiceChip(
+                label: Text('${m.fullName}  ${doneIn(m)}/3'),
+                avatar: doneIn(m) == 3
+                    ? Icon(Icons.check_circle_rounded, color: scheme.primary)
+                    : null,
+                selected: m == mode,
+                onSelected: (_) =>
+                    ref.read(challengeModeProvider.notifier).select(m),
+              ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 220),
+          child: Column(
+            key: ValueKey(mode),
+            children: [
+              for (final c in today) ...[
+                _ChallengeCard(challenge: c, progress: log.of(c.id)),
+                const SizedBox(height: 12),
+              ],
+            ],
+          ),
+        ),
         const SectionTitle('Historique récent'),
         Panel(
           padding: const EdgeInsets.symmetric(vertical: 4),
@@ -232,6 +280,7 @@ class _ChallengeCard extends ConsumerWidget {
   );
 }
 
+/// Une journée passée : défis réussis par mode (trois pastilles par mode).
 class _HistoryRow extends StatelessWidget {
   const _HistoryRow({
     required this.day,
@@ -246,8 +295,9 @@ class _HistoryRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final challenges = DailyChallengeGenerator.forDay(day);
-    final succeeded = challenges.where((c) => log.of(c.id).succeeded).length;
+    final date = DailyChallengeGenerator.dateKey(day);
+    final total = GameMode.values.length * ChallengeDifficulty.values.length;
+    final succeeded = log.succeededOn(date);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
@@ -259,31 +309,63 @@ class _HistoryRow extends StatelessWidget {
             ),
           ),
           Semantics(
-            label: '$succeeded défis réussis sur 3',
+            label: '$succeeded défis réussis sur $total',
             excludeSemantics: true,
             child: Row(
               children: [
-                for (final c in challenges)
+                for (final m in GameMode.values)
                   Padding(
                     padding: const EdgeInsets.only(left: 6),
-                    child: Icon(
-                      switch (log.of(c.id).status) {
-                        ChallengeStatus.succeeded => Icons.check_circle_rounded,
-                        ChallengeStatus.inProgress => Icons.cancel_rounded,
-                        ChallengeStatus.notStarted =>
-                          Icons.radio_button_unchecked_rounded,
-                      },
-                      size: 20,
-                      color: log.of(c.id).succeeded
+                    child: _ModeDots(done: log.succeededOn(date, m)),
+                  ),
+                const SizedBox(width: 10),
+                SizedBox(
+                  width: 42,
+                  child: Text(
+                    '$succeeded/$total',
+                    textAlign: TextAlign.end,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: succeeded > 0
                           ? scheme.primary
-                          : scheme.onSurfaceVariant.withValues(alpha: 0.6),
+                          : scheme.onSurfaceVariant,
                     ),
                   ),
+                ),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Trois petits points empilés : défis réussis d'un mode.
+class _ModeDots extends StatelessWidget {
+  const _ModeDots({required this.done});
+
+  final int done;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 2; i >= 0; i--)
+          Container(
+            width: 6,
+            height: 6,
+            margin: const EdgeInsets.symmetric(vertical: 1),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: i < done
+                  ? scheme.primary
+                  : scheme.onSurface.withValues(alpha: 0.15),
+            ),
+          ),
+      ],
     );
   }
 }
