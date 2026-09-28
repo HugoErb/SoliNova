@@ -17,11 +17,10 @@ void main() {
     test('valeurs de référence stables (ne doivent jamais changer)', () {
       final r = SeededRandom(1);
       // Valeurs figées : si ce test casse, les défis quotidiens changent.
-      expect([r.nextUint32(), r.nextUint32(), r.nextUint32()], [
-        2693262067,
-        11749833,
-        2265367787,
-      ]);
+      expect(
+        [r.nextUint32(), r.nextUint32(), r.nextUint32()],
+        [2693262067, 11749833, 2265367787],
+      );
     });
 
     test('nextInt reste dans les bornes', () {

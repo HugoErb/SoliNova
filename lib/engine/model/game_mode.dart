@@ -4,18 +4,8 @@ enum GameFamily { klondike, spider, freecell }
 /// Mode de jeu jouable. Chaque mode a ses règles, sa distribution, son score
 /// et ses statistiques propres.
 enum GameMode {
-  klondike1(
-    GameFamily.klondike,
-    'Klondike',
-    'Tirage 1 carte',
-    drawCount: 1,
-  ),
-  klondike3(
-    GameFamily.klondike,
-    'Klondike',
-    'Tirage 3 cartes',
-    drawCount: 3,
-  ),
+  klondike1(GameFamily.klondike, 'Klondike', 'Tirage 1 carte', drawCount: 1),
+  klondike3(GameFamily.klondike, 'Klondike', 'Tirage 3 cartes', drawCount: 3),
   spider1(GameFamily.spider, 'Spider', '1 couleur', suitCount: 1),
   spider2(GameFamily.spider, 'Spider', '2 couleurs', suitCount: 2),
   spider4(GameFamily.spider, 'Spider', '4 couleurs', suitCount: 4),

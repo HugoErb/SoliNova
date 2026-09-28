@@ -1,16 +1,21 @@
 import 'dart:async';
+import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/repositories.dart';
 import '../engine/model/game_mode.dart';
+import '../engine/model/game_state.dart';
 import '../engine/model/move.dart';
 import '../engine/model/pile.dart';
-import '../engine/rng/seeded_random.dart';
+import '../engine/rules/game_rules.dart';
 import '../engine/rules/move_advisor.dart';
+import '../engine/rules/rules_registry.dart';
 import '../engine/scoring/score_calculator.dart';
 import '../engine/session/game_session.dart';
+import '../engine/solver/solver.dart';
+import '../engine/solver/winnable_deals.dart';
 import '../meta/daily/daily_challenge.dart';
 import '../meta/profile/game_completion.dart';
 import '../ui/feedback/feedback_service.dart';
@@ -32,6 +37,9 @@ final class HintInfo {
   final MoveAdvice advice;
 }
 
+/// Aide demandée par le joueur.
+enum Assist { hint, play }
+
 /// État observé par l'écran de jeu.
 @immutable
 final class GameViewState {
@@ -43,6 +51,7 @@ final class GameViewState {
     this.dealSerial = 0,
     this.paused = false,
     this.autoPlaying = false,
+    this.thinking,
     this.report,
   });
 
@@ -57,6 +66,9 @@ final class GameViewState {
   final int dealSerial;
   final bool paused;
   final bool autoPlaying;
+
+  /// Aide en attente d'une recherche de suite gagnante.
+  final Assist? thinking;
 
   /// Bilan de la dernière victoire (écran de victoire).
   final GameReport? report;
@@ -79,6 +91,8 @@ final class GameViewState {
     int? dealSerial,
     bool? paused,
     bool? autoPlaying,
+    Assist? thinking,
+    bool clearThinking = false,
     GameReport? report,
     bool clearReport = false,
   }) => GameViewState(
@@ -89,6 +103,7 @@ final class GameViewState {
     dealSerial: dealSerial ?? this.dealSerial,
     paused: paused ?? this.paused,
     autoPlaying: autoPlaying ?? this.autoPlaying,
+    thinking: clearThinking ? null : (thinking ?? this.thinking),
     report: clearReport ? null : (report ?? this.report),
   );
 }
@@ -119,11 +134,22 @@ class GameController extends Notifier<GameViewState> {
   int _hintSerial = 0;
   int _autoToken = 0;
 
+  /// Suite gagnante connue : coup à jouer pour chaque position du chemin.
+  Map<String, Move> _plan = {};
+  int _solveToken = 0;
+  int _deepToken = 0;
+
+  /// Budget de la recherche immédiate, puis de celle en arrière-plan.
+  static const _quickBudget = 1500;
+  static const _deepBudget = 60000;
+
   @override
   GameViewState build() {
     _repo = GameRepository(ref.read(storeProvider));
     _saver = DebouncedSaver<GameSession>(_repo.save);
     ref.onDispose(() {
+      _solveToken++;
+      _deepToken++;
       _ticker?.cancel();
       unawaited(_messages.close());
     });
@@ -131,6 +157,7 @@ class GameController extends Notifier<GameViewState> {
     final restored = session != null && !session.isWon ? session : null;
     _base = restored?.elapsedMs ?? 0;
     elapsed.value = _base;
+    if (restored != null) _loadDealPlan(restored);
     return GameViewState(session: restored);
   }
 
@@ -211,7 +238,7 @@ class GameController extends Notifier<GameViewState> {
     _startSession(
       GameSession.start(
         mode,
-        seed ?? SeededRandom.randomSeed(),
+        seed ?? WinnableDeals.randomSeed(mode),
         challengeId: challengeId,
       ),
     );
@@ -265,10 +292,38 @@ class GameController extends Notifier<GameViewState> {
 
   void _startSession(GameSession session) {
     _autoToken++;
+    _solveToken++;
+    _deepToken++;
+    _plan = {};
     _resetClock(session.elapsedMs);
     state = GameViewState(session: session, dealSerial: state.dealSerial + 1);
     _saver.schedule(session);
     _updateClock();
+    _loadDealPlan(session);
+  }
+
+  /// Charge la solution livrée pour cette donne, si elle est répertoriée.
+  void _loadDealPlan(GameSession session) {
+    final token = _solveToken;
+    unawaited(
+      ref
+          .read(solutionBookProvider)
+          .solutionFor(session.mode, session.seed)
+          .then((moves) {
+            if (moves == null || token != _solveToken) return;
+            if (state.session?.seed != session.seed) return;
+            _learnPlan(session.rules, session.rules.deal(session.seed), moves);
+          }),
+    );
+  }
+
+  void _learnPlan(GameRules rules, GameState from, List<Move> moves) {
+    var s = from;
+    for (final move in moves) {
+      if (!rules.isLegal(s, move)) break;
+      _plan[Solver.layoutKey(s)] = move;
+      s = rules.apply(s, move);
+    }
   }
 
   void dismissReport() => state = state.copyWith(clearReport: true);
@@ -297,7 +352,8 @@ class GameController extends Notifier<GameViewState> {
     }
     _emitFor(s, move);
     if (assisted) _autoToken++;
-    state = state.copyWith(session: next, clearHint: true);
+    _deepToken++;
+    state = state.copyWith(session: next, clearHint: true, clearThinking: true);
     _updateClock();
     _persist();
     if (assisted) {
@@ -398,26 +454,110 @@ class GameController extends Notifier<GameViewState> {
     if (prev == null) return;
     _autoToken++;
     _fx.emit(FeedbackEvent.move);
-    state = state.copyWith(session: prev, clearHint: true);
+    _deepToken++;
+    state = state.copyWith(session: prev, clearHint: true, clearThinking: true);
     _persist();
   }
 
-  MoveAdvice? _advice(GameSession session) =>
-      MoveAdvisor.best(session.rules, session.state, history: session.history);
+  bool _canAssist(GameSession? s) =>
+      s != null &&
+      !state.paused &&
+      !state.autoPlaying &&
+      state.thinking == null &&
+      !s.isWon;
 
-  /// Explique le meilleur coup estimé sans le jouer.
-  void hint() {
+  /// Explique le prochain coup d'une suite gagnante sans le jouer.
+  void hint() => _assist(play: false);
+
+  /// Même coup que l'indice, joué sans message ni surbrillance.
+  void playBestMove() => _assist(play: true);
+
+  /// Trouve le coup conseillé : chemin gagnant connu, sinon recherche
+  /// immédiate, sinon recherche plus longue en arrière-plan.
+  void _assist({required bool play}) {
     final s = state.session;
-    if (s == null || state.paused || state.autoPlaying || s.isWon) return;
-    final advice = _advice(s);
+    if (s == null || !_canAssist(s)) return;
+    clearHint();
+    final planned = _plan[Solver.layoutKey(s.state)];
+    if (planned != null && s.rules.isLegal(s.state, planned)) {
+      _deliver(s, planned, play: play, winning: true);
+      return;
+    }
+    final quick = Solver.solve(s.rules, s.state, maxNodes: _quickBudget);
+    if (_useResult(s, quick, play: play)) return;
+    final token = ++_deepToken;
+    final mode = s.mode;
+    final board = s.state;
+    state = state.copyWith(thinking: play ? Assist.play : Assist.hint);
+    unawaited(
+      _solveInBackground(mode, board).then((result) {
+        if (token != _deepToken) return;
+        state = state.copyWith(clearThinking: true);
+        final current = state.session;
+        if (current == null || !identical(current.state, board)) return;
+        if (!_useResult(current, result, play: play)) {
+          _fallback(current, play: play);
+        }
+      }),
+    );
+  }
+
+  /// Méthode statique : la fonction envoyée à l'isolat ne doit rien
+  /// capturer du contrôleur.
+  static Future<SolveResult> _solveInBackground(
+    GameMode mode,
+    GameState board,
+  ) => Isolate.run(
+    () => Solver.solve(RulesRegistry.of(mode), board, maxNodes: _deepBudget),
+  );
+
+  /// Applique un résultat du solveur ; faux s'il reste à chercher.
+  bool _useResult(GameSession s, SolveResult result, {required bool play}) {
+    if (result.solved) {
+      if (result.moves!.isEmpty) return true;
+      _learnPlan(s.rules, s.state, result.moves!);
+      _deliver(s, result.moves!.first, play: play, winning: true);
+      return true;
+    }
+    if (result.exhausted) {
+      _messages.add(
+        'Plus aucune suite gagnante depuis cette position. '
+        'Annule quelques coups ou commence une nouvelle partie.',
+      );
+      return true;
+    }
+    return false;
+  }
+
+  /// Aucune solution trouvée dans le budget : conseil estimé.
+  void _fallback(GameSession s, {required bool play}) {
+    final advice = MoveAdvisor.best(s.rules, s.state, history: s.history);
     if (advice == null) {
-      clearHint();
       _messages.add(
         'Aucun mouvement utile. Essaie Annuler ou une nouvelle partie.',
       );
       return;
     }
-    final move = advice.move;
+    _messages.add('Pas de suite gagnante trouvée à coup sûr : conseil estimé.');
+    _deliver(s, advice.move, play: play, winning: false);
+  }
+
+  void _deliver(
+    GameSession s,
+    Move move, {
+    required bool play,
+    required bool winning,
+  }) {
+    if (play) {
+      this.play(move, assisted: true);
+      return;
+    }
+    final advice = MoveAdvisor.explain(
+      s.rules,
+      s.state,
+      move,
+      winning: winning,
+    );
     // Laisse le temps de lire l'indice avant tout nouveau déplacement.
     _autoToken++;
     final Set<int> cards;
@@ -445,16 +585,6 @@ class GameController extends Notifier<GameViewState> {
       ),
     );
     _persist();
-  }
-
-  /// Même suggestion que l'indice, jouée sans message ni surbrillance.
-  void playBestMove() {
-    final s = state.session;
-    if (s == null || state.paused || state.autoPlaying || s.isWon) return;
-    final advice = _advice(s);
-    clearHint();
-    if (advice == null) return;
-    play(advice.move, assisted: true);
   }
 
   void clearHint() {

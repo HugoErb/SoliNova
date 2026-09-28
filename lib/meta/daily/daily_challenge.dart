@@ -1,6 +1,7 @@
 import '../../engine/game_result.dart';
 import '../../engine/model/game_mode.dart';
 import '../../engine/rng/seeded_random.dart';
+import '../../engine/solver/winnable_deals.dart';
 import '../json.dart';
 
 enum ChallengeDifficulty {
@@ -163,15 +164,16 @@ abstract final class DailyChallengeGenerator {
         _ => const ChallengeObjective(noHints: true, noUndo: true),
       },
     };
-    // Graine de la donne : date + mode + difficulté.
-    final seed = SeededRandom.hashString(
-      'deal|$date|${mode.name}|${difficulty.name}',
+    // Donne gagnable choisie par date + mode + difficulté.
+    final seed = WinnableDeals.seedFor(
+      mode,
+      SeededRandom.hashString('deal|$date|${mode.name}|${difficulty.name}'),
     );
     return DailyChallenge(
       date: date,
       difficulty: difficulty,
       mode: mode,
-      seed: seed == 0 ? 1 : seed,
+      seed: seed,
       objective: objective,
     );
   }

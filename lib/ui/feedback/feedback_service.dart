@@ -41,7 +41,9 @@ class FeedbackService {
       try {
         _pools[e] = await AudioPool.createFromAsset(
           path: 'sounds/${e.file}.wav',
-          maxPlayers: e == FeedbackEvent.move || e == FeedbackEvent.deal ? 4 : 2,
+          maxPlayers: e == FeedbackEvent.move || e == FeedbackEvent.deal
+              ? 4
+              : 2,
         );
       } on Object catch (error) {
         debugPrint('Son indisponible (${e.file}) : $error');

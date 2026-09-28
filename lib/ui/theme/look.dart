@@ -30,11 +30,7 @@ enum FaceStyle {
 /// Style de mouvement des cartes.
 @immutable
 final class MotionStyle {
-  const MotionStyle({
-    required this.move,
-    required this.curve,
-    this.lift = 0,
-  });
+  const MotionStyle({required this.move, required this.curve, this.lift = 0});
 
   final Duration move;
   final Curve curve;
@@ -112,9 +108,8 @@ final class Look {
     animationFactor: animationFactor,
   );
 
-  Duration scaled(Duration d) => Duration(
-    microseconds: (d.inMicroseconds * animationFactor).round(),
-  );
+  Duration scaled(Duration d) =>
+      Duration(microseconds: (d.inMicroseconds * animationFactor).round());
 
   static Look resolve({
     required Inventory inventory,

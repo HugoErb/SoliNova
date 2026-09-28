@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:solinova/app/app.dart';
 import 'package:solinova/app/game_controller.dart';
 import 'package:solinova/app/providers.dart';
+import 'package:solinova/app/solution_book.dart';
 import 'package:solinova/data/storage.dart';
 import 'package:solinova/engine/model/game_mode.dart';
 import 'package:solinova/engine/model/card.dart';
@@ -17,6 +18,7 @@ import 'package:solinova/engine/model/rank.dart';
 import 'package:solinova/engine/model/suit.dart';
 import 'package:solinova/engine/rules/rules_registry.dart';
 import 'package:solinova/engine/session/game_session.dart';
+import 'package:solinova/engine/solver/winnable_deals.dart';
 import 'package:solinova/meta/economy/wallet.dart';
 import 'package:solinova/meta/profile/profile.dart';
 import 'package:solinova/ui/game/game_screen.dart';
@@ -43,6 +45,10 @@ Future<ProviderContainer> pumpApp(WidgetTester tester, Size size) async {
       storeProvider.overrideWithValue(MemoryStore()),
       initialProfileProvider.overrideWithValue(
         const Profile(wallet: Wallet(balance: 5000)),
+      ),
+      // Lecture synchrone : les solutions sont prêtes dès la distribution.
+      solutionBookProvider.overrideWithValue(
+        SolutionBook(load: (key) async => File(key).readAsStringSync()),
       ),
     ],
   );
@@ -122,7 +128,9 @@ void main() {
       for (final mode in GameMode.values) {
         testWidgets('partie ${mode.fullName}', (tester) async {
           final container = await pumpApp(tester, entry.value);
-          container.read(gameProvider.notifier).newGame(mode, seed: 7);
+          container
+              .read(gameProvider.notifier)
+              .newGame(mode, seed: WinnableDeals.seedsOf(mode).first);
           final nav = tester.state<NavigatorState>(
             find.byType(Navigator).first,
           );

@@ -29,6 +29,7 @@ flutter:
 
   assets:
     - assets/sounds/
+    - assets/deals/
 
   fonts:
     - family: Manrope

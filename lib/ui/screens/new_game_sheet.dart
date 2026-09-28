@@ -74,7 +74,9 @@ class _ModePicker extends ConsumerWidget {
                 ),
               ),
               for (final family in GameFamily.values) ...[
-                for (final mode in GameMode.values.where((m) => m.family == family))
+                for (final mode in GameMode.values.where(
+                  (m) => m.family == family,
+                ))
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Material(
@@ -103,7 +105,9 @@ class _ModePicker extends ConsumerWidget {
                                     const SizedBox(height: 2),
                                     Text(
                                       _descriptions[mode]!,
-                                      style: TextStyle(color: scheme.onSurfaceVariant),
+                                      style: TextStyle(
+                                        color: scheme.onSurfaceVariant,
+                                      ),
                                     ),
                                   ],
                                 ),

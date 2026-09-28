@@ -85,8 +85,10 @@ void main() {
 
   test('les motifs tiennent dans leur carré', () {
     for (final m in Motif.values) {
-      final b = MotifPaths.inRect(m, const Rect.fromLTWH(0, 0, 100, 100))
-          .getBounds();
+      final b = MotifPaths.inRect(
+        m,
+        const Rect.fromLTWH(0, 0, 100, 100),
+      ).getBounds();
       expect(b.isEmpty, isFalse, reason: m.name);
       expect(
         const Rect.fromLTWH(-1, -1, 102, 102).contains(b.topLeft) &&

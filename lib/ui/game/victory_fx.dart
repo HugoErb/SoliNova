@@ -61,7 +61,13 @@ class _VictoryFxState extends State<VictoryFx>
   List<_Particle> _spawn(Size size) {
     final rnd = math.Random(7);
     final t = widget.look.theme;
-    final palette = [t.accent, t.highlight, t.face.red, t.face.paper, t.onSurface];
+    final palette = [
+      t.accent,
+      t.highlight,
+      t.face.red,
+      t.face.paper,
+      t.onSurface,
+    ];
     Color pick() => palette[rnd.nextInt(palette.length)];
     switch (widget.look.victory) {
       case VictoryStyle.cascade:
@@ -69,7 +75,10 @@ class _VictoryFxState extends State<VictoryFx>
           for (var i = 0; i < 28; i++)
             _Particle(
               p: Offset(size.width * (0.1 + 0.8 * rnd.nextDouble()), -60),
-              v: Offset((rnd.nextDouble() - 0.5) * 180, 60 + rnd.nextDouble() * 120),
+              v: Offset(
+                (rnd.nextDouble() - 0.5) * 180,
+                60 + rnd.nextDouble() * 120,
+              ),
               color: t.face.paper,
               size: 30 + rnd.nextDouble() * 14,
               spin: (rnd.nextDouble() - 0.5) * 3,
@@ -81,8 +90,14 @@ class _VictoryFxState extends State<VictoryFx>
         return [
           for (var i = 0; i < 140; i++)
             _Particle(
-              p: Offset(size.width * rnd.nextDouble(), -20 - rnd.nextDouble() * 200),
-              v: Offset((rnd.nextDouble() - 0.5) * 60, 140 + rnd.nextDouble() * 160),
+              p: Offset(
+                size.width * rnd.nextDouble(),
+                -20 - rnd.nextDouble() * 200,
+              ),
+              v: Offset(
+                (rnd.nextDouble() - 0.5) * 60,
+                140 + rnd.nextDouble() * 160,
+              ),
               color: pick(),
               size: 5 + rnd.nextDouble() * 6,
               spin: (rnd.nextDouble() - 0.5) * 12,
@@ -94,7 +109,10 @@ class _VictoryFxState extends State<VictoryFx>
           for (var i = 0; i < 22; i++)
             _Particle(
               p: Offset(size.width * (rnd.nextDouble() * 1.2 - 0.1), -40),
-              v: Offset(-120 - rnd.nextDouble() * 120, 260 + rnd.nextDouble() * 200),
+              v: Offset(
+                -120 - rnd.nextDouble() * 120,
+                260 + rnd.nextDouble() * 200,
+              ),
               color: i.isEven ? t.accent : t.highlight,
               size: 6 + rnd.nextDouble() * 10,
               spin: 0,
@@ -198,7 +216,11 @@ class _FxPainter extends CustomPainter {
           canvas.rotate(lt * p.spin);
           canvas.scale(1, math.cos(lt * p.spin * 1.3).abs() * 0.8 + 0.2);
           canvas.drawRect(
-            Rect.fromCenter(center: Offset.zero, width: p.size, height: p.size * 0.55),
+            Rect.fromCenter(
+              center: Offset.zero,
+              width: p.size,
+              height: p.size * 0.55,
+            ),
             Paint()..color = p.color.withValues(alpha: fadeAll),
           );
           canvas.restore();
@@ -210,7 +232,10 @@ class _FxPainter extends CustomPainter {
             pos,
             Paint()
               ..shader = LinearGradient(
-                colors: [p.color.withValues(alpha: 0), p.color.withValues(alpha: 0.8 * fadeAll)],
+                colors: [
+                  p.color.withValues(alpha: 0),
+                  p.color.withValues(alpha: 0.8 * fadeAll),
+                ],
               ).createShader(Rect.fromPoints(tail, pos))
               ..strokeWidth = p.size * 0.35
               ..strokeCap = StrokeCap.round,
@@ -223,7 +248,8 @@ class _FxPainter extends CustomPainter {
           final life = (lt / 1.6).clamp(0.0, 1.0);
           if (life >= 1) continue;
           final drag = 1 - math.pow(1 - life, 2);
-          final pos = p.p + p.v * (drag * 1.6).toDouble() + Offset(0, 40 * life * life);
+          final pos =
+              p.p + p.v * (drag * 1.6).toDouble() + Offset(0, 40 * life * life);
           canvas.drawCircle(
             pos,
             p.size * (1 - life * 0.5),
@@ -233,7 +259,13 @@ class _FxPainter extends CustomPainter {
     }
   }
 
-  void _drawMiniCard(Canvas canvas, Offset c, _Particle p, double lt, double fade) {
+  void _drawMiniCard(
+    Canvas canvas,
+    Offset c,
+    _Particle p,
+    double lt,
+    double fade,
+  ) {
     final w = p.size;
     final h = w * 1.42;
     canvas.save();
@@ -241,7 +273,10 @@ class _FxPainter extends CustomPainter {
     canvas.rotate(lt * p.spin * 0.6);
     final rect = Rect.fromCenter(center: Offset.zero, width: w, height: h);
     canvas.drawRRect(
-      RRect.fromRectAndRadius(rect.shift(const Offset(0, 2)), Radius.circular(w * 0.1)),
+      RRect.fromRectAndRadius(
+        rect.shift(const Offset(0, 2)),
+        Radius.circular(w * 0.1),
+      ),
       Paint()..color = Colors.black.withValues(alpha: 0.18 * fade),
     );
     canvas.drawRRect(
@@ -254,7 +289,10 @@ class _FxPainter extends CustomPainter {
         suit,
         Rect.fromCenter(center: Offset.zero, width: w * 0.5, height: w * 0.5),
       ),
-      Paint()..color = (suit.isRed ? paper.red : paper.black).withValues(alpha: fade),
+      Paint()
+        ..color = (suit.isRed ? paper.red : paper.black).withValues(
+          alpha: fade,
+        ),
     );
     canvas.restore();
   }

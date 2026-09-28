@@ -19,10 +19,9 @@ final class Inventory {
     return item != null && (item.isFree || owned.contains(id));
   }
 
-  String? equippedIn(ShopCategory category) =>
-      equipped.containsKey(category)
-          ? equipped[category]
-          : ShopCatalog.defaults[category];
+  String? equippedIn(ShopCategory category) => equipped.containsKey(category)
+      ? equipped[category]
+      : ShopCatalog.defaults[category];
 
   bool isEquipped(String id) {
     final item = ShopCatalog.byId(id);
@@ -64,10 +63,9 @@ final class Inventory {
   }
 
   /// Ajoute un élément offert (récompense de succès).
-  Inventory grant(String id) =>
-      ShopCatalog.byId(id) == null || owns(id)
-          ? this
-          : Inventory(owned: {...owned, id}, equipped: equipped);
+  Inventory grant(String id) => ShopCatalog.byId(id) == null || owns(id)
+      ? this
+      : Inventory(owned: {...owned, id}, equipped: equipped);
 
   Json toJson() => {
     'owned': owned.toList()..sort(),

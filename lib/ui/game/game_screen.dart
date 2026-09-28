@@ -467,6 +467,12 @@ class _HintBanner extends StatelessWidget {
                                 ? scheme.onPrimaryContainer
                                 : scheme.onSurface,
                           ),
+                          if (advice.winning)
+                            chip(
+                              'Mène à la victoire',
+                              scheme.secondaryContainer,
+                              scheme.onSecondaryContainer,
+                            ),
                           chip(
                             'Indice −${ScoreCalculator.hintCost} pts',
                             scheme.tertiaryContainer,
@@ -505,7 +511,11 @@ class _ActionBar extends ConsumerWidget {
     final session = game.session;
     final canUndo = session != null && session.canUndo && !game.autoPlaying;
     final canAssist =
-        session != null && !session.isWon && !game.paused && !game.autoPlaying;
+        session != null &&
+        !session.isWon &&
+        !game.paused &&
+        !game.autoPlaying &&
+        game.thinking == null;
     final scheme = Theme.of(context).colorScheme;
 
     return Padding(
@@ -524,6 +534,7 @@ class _ActionBar extends ConsumerWidget {
               icon: Icons.lightbulb_outline_rounded,
               label: 'Indice (${ScoreCalculator.hintCost} points)',
               cost: ScoreCalculator.hintCost,
+              busy: game.thinking == Assist.hint,
               onTap: canAssist ? controller.hint : null,
             ),
           ),
@@ -533,6 +544,7 @@ class _ActionBar extends ConsumerWidget {
               label:
                   'Jouer le meilleur coup (${ScoreCalculator.assistedMoveCost} points)',
               cost: ScoreCalculator.assistedMoveCost,
+              busy: game.thinking == Assist.play,
               onTap: canAssist
                   ? () {
                       ScaffoldMessenger.of(context)
@@ -576,6 +588,7 @@ class _ActionButton extends StatelessWidget {
     required this.onTap,
     this.highlight,
     this.cost,
+    this.busy = false,
   });
 
   final IconData icon;
@@ -583,6 +596,9 @@ class _ActionButton extends StatelessWidget {
   final VoidCallback? onTap;
   final Color? highlight;
   final int? cost;
+
+  /// Recherche en cours : la roue remplace l'icône.
+  final bool busy;
 
   @override
   Widget build(BuildContext context) {
@@ -601,7 +617,7 @@ class _ActionButton extends StatelessWidget {
           excludeSemantics: true,
           child: AnimatedOpacity(
             duration: const Duration(milliseconds: 200),
-            opacity: enabled ? 1 : 0.4,
+            opacity: enabled || busy ? 1 : 0.4,
             child: Material(
               color: bg,
               borderRadius: BorderRadius.circular(16),
@@ -614,7 +630,16 @@ class _ActionButton extends StatelessWidget {
                     clipBehavior: Clip.none,
                     alignment: Alignment.center,
                     children: [
-                      Icon(icon, color: fg, size: 26),
+                      if (busy)
+                        SizedBox.square(
+                          dimension: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: scheme.primary,
+                          ),
+                        )
+                      else
+                        Icon(icon, color: fg, size: 26),
                       if (cost != null)
                         Positioned(
                           top: 5,

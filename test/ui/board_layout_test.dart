@@ -30,9 +30,17 @@ void expectInside(BoardGeometry g, String label) {
   for (final p in g.placements.values) {
     final r = p.rect;
     expect(r.left, greaterThanOrEqualTo(-0.01), reason: '$label gauche');
-    expect(r.right, lessThanOrEqualTo(g.size.width + 0.01), reason: '$label droite');
+    expect(
+      r.right,
+      lessThanOrEqualTo(g.size.width + 0.01),
+      reason: '$label droite',
+    );
     expect(r.top, greaterThanOrEqualTo(-0.01), reason: '$label haut');
-    expect(r.bottom, lessThanOrEqualTo(g.size.height + 0.01), reason: '$label bas');
+    expect(
+      r.bottom,
+      lessThanOrEqualTo(g.size.height + 0.01),
+      reason: '$label bas',
+    );
   }
 }
 
@@ -108,9 +116,9 @@ void main() {
         );
         expect(g.cardSize.width, greaterThanOrEqualTo(28), reason: mode.name);
         // Largeur totale utilisée : jamais plus que l'écran.
-        final maxRight = g.slots.values.map((r) => r.right).reduce(
-          (a, b) => a > b ? a : b,
-        );
+        final maxRight = g.slots.values
+            .map((r) => r.right)
+            .reduce((a, b) => a > b ? a : b);
         expect(maxRight, lessThanOrEqualTo(entry.value.width));
       }
     });

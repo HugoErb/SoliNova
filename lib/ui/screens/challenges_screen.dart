@@ -7,16 +7,36 @@ import '../../meta/daily/daily_challenge.dart';
 import '../widgets/common.dart';
 import 'new_game_sheet.dart';
 
-const _weekdays = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
+const _weekdays = [
+  'lundi',
+  'mardi',
+  'mercredi',
+  'jeudi',
+  'vendredi',
+  'samedi',
+  'dimanche',
+];
 const _months = [
-  'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet',
-  'août', 'septembre', 'octobre', 'novembre', 'décembre',
+  'janvier',
+  'février',
+  'mars',
+  'avril',
+  'mai',
+  'juin',
+  'juillet',
+  'août',
+  'septembre',
+  'octobre',
+  'novembre',
+  'décembre',
 ];
 
 String _dayLabel(DateTime d, DateTime today) {
-  final diff = DateTime(today.year, today.month, today.day)
-      .difference(DateTime(d.year, d.month, d.day))
-      .inDays;
+  final diff = DateTime(
+    today.year,
+    today.month,
+    today.day,
+  ).difference(DateTime(d.year, d.month, d.day)).inDays;
   if (diff == 0) return 'Aujourd\'hui';
   if (diff == 1) return 'Hier';
   final label = '${_weekdays[d.weekday - 1]} ${d.day} ${_months[d.month - 1]}';
@@ -136,12 +156,18 @@ class _ChallengeCard extends ConsumerWidget {
               const SizedBox(width: 6),
               Text(
                 c.difficulty.label,
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 17,
+                ),
               ),
               const Spacer(),
               Text(
                 statusText,
-                style: TextStyle(color: statusColor, fontWeight: FontWeight.w800),
+                style: TextStyle(
+                  color: statusColor,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ],
           ),
@@ -151,20 +177,32 @@ class _ChallengeCard extends ConsumerWidget {
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 2),
-          Text(c.objective.describe(), style: TextStyle(color: scheme.onSurfaceVariant)),
+          Text(
+            c.objective.describe(),
+            style: TextStyle(color: scheme.onSurfaceVariant),
+          ),
           const SizedBox(height: 14),
           Row(
             children: [
               Icon(Icons.bolt_rounded, size: 18, color: scheme.primary),
-              Text(' ${c.rewardXp} XP', style: const TextStyle(fontWeight: FontWeight.w800)),
+              Text(
+                ' ${c.rewardXp} XP',
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
               const SizedBox(width: 14),
               NovaStar(size: 13, color: scheme.primary),
-              Text(' ${c.rewardPoints} points', style: const TextStyle(fontWeight: FontWeight.w800)),
+              Text(
+                ' ${c.rewardPoints} points',
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
               const Spacer(),
               if (progress.bestTimeMs != null)
                 Text(
                   'Meilleur temps ${formatDuration(progress.bestTimeMs!)}',
-                  style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5),
+                  style: TextStyle(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 12.5,
+                  ),
                 ),
             ],
           ),
@@ -176,7 +214,9 @@ class _ChallengeCard extends ConsumerWidget {
                   onPressed: () => _play(context, ref),
                 )
               : PrimaryButton(
-                  label: status == ChallengeStatus.inProgress ? 'Réessayer' : 'Jouer',
+                  label: status == ChallengeStatus.inProgress
+                      ? 'Réessayer'
+                      : 'Jouer',
                   icon: Icons.play_arrow_rounded,
                   onPressed: () => _play(context, ref),
                 ),
@@ -193,7 +233,11 @@ class _ChallengeCard extends ConsumerWidget {
 }
 
 class _HistoryRow extends StatelessWidget {
-  const _HistoryRow({required this.day, required this.today, required this.log});
+  const _HistoryRow({
+    required this.day,
+    required this.today,
+    required this.log,
+  });
 
   final DateTime day;
   final DateTime today;
@@ -226,7 +270,8 @@ class _HistoryRow extends StatelessWidget {
                       switch (log.of(c.id).status) {
                         ChallengeStatus.succeeded => Icons.check_circle_rounded,
                         ChallengeStatus.inProgress => Icons.cancel_rounded,
-                        ChallengeStatus.notStarted => Icons.radio_button_unchecked_rounded,
+                        ChallengeStatus.notStarted =>
+                          Icons.radio_button_unchecked_rounded,
                       },
                       size: 20,
                       color: log.of(c.id).succeeded

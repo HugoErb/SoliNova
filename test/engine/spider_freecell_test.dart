@@ -14,24 +14,30 @@ void main() {
   const fc = FreeCellRules(GameMode.freecell);
 
   group('Spider', () {
-    test('toute carte de valeur supérieure accepte, quelle que soit la couleur', () {
-      final st = board(
-        GameMode.spider4,
-        tableauCount: 10,
-        foundationCount: 8,
-        tableau: [
-          [c(8, h)],
-          [c(7, s)],
-        ],
-      );
-      expect(
-        sp4.isLegal(
-          st,
-          const TransferMove(from: PileRef.tableau(1), to: PileRef.tableau(0)),
-        ),
-        isTrue,
-      );
-    });
+    test(
+      'toute carte de valeur supérieure accepte, quelle que soit la couleur',
+      () {
+        final st = board(
+          GameMode.spider4,
+          tableauCount: 10,
+          foundationCount: 8,
+          tableau: [
+            [c(8, h)],
+            [c(7, s)],
+          ],
+        );
+        expect(
+          sp4.isLegal(
+            st,
+            const TransferMove(
+              from: PileRef.tableau(1),
+              to: PileRef.tableau(0),
+            ),
+          ),
+          isTrue,
+        );
+      },
+    );
 
     test('seule une suite de même couleur se déplace en bloc', () {
       final st = board(
@@ -278,7 +284,10 @@ void main() {
           [c(13, s), c(12, h)],
         ],
         foundations: [run(s, 12), run(h, 11), run(d, 13), run(cl, 13)],
-        cells: [[], [c(13, h)]],
+        cells: [
+          [],
+          [c(13, h)],
+        ],
       );
       expect(fc.canAutoComplete(st), isTrue);
       var cur = st;

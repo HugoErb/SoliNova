@@ -99,12 +99,7 @@ final class Settings {
       ),
       autoMove: readBool(j, 'autoMove', d.autoMove),
       tapToMove: readBool(j, 'tapToMove', d.tapToMove),
-      darkMode: readEnum(
-        j,
-        'darkMode',
-        DarkModePreference.values,
-        d.darkMode,
-      ),
+      darkMode: readEnum(j, 'darkMode', DarkModePreference.values, d.darkMode),
       showScore: readBool(j, 'showScore', d.showScore),
       showTimer: readBool(j, 'showTimer', d.showTimer),
       confirmAbandon: readBool(j, 'confirmAbandon', d.confirmAbandon),

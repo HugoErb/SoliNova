@@ -186,12 +186,7 @@ final class KlondikeRules extends GameRules {
     return moves;
   }
 
-  void _addTransfers(
-    GameState state,
-    PileRef from,
-    int count,
-    List<Move> out,
-  ) {
+  void _addTransfers(GameState state, PileRef from, int count, List<Move> out) {
     final targets = <PileRef>[
       for (var i = 0; i < 4; i++) PileRef.foundation(i),
       for (var i = 0; i < 7; i++) PileRef.tableau(i),

@@ -332,11 +332,10 @@ class _BoardViewState extends ConsumerState<BoardView> {
                       geo: geo,
                       state: session.state,
                       color: look.theme.slot,
-                      recyclable:
-                          session.rules.isLegal(
-                            session.state,
-                            const RecycleMove(),
-                          ),
+                      recyclable: session.rules.isLegal(
+                        session.state,
+                        const RecycleMove(),
+                      ),
                     ),
                   ),
                 ),
@@ -392,13 +391,14 @@ class _BoardViewState extends ConsumerState<BoardView> {
 
   /// Rang de distribution : ligne par ligne, de gauche à droite.
   Map<int, int> _dealOrder(BoardGeometry geo) {
-    final list = geo.placements.values
-        .where((p) => p.pile.kind == PileKind.tableau)
-        .toList()
-      ..sort((a, b) {
-        final byRow = a.index.compareTo(b.index);
-        return byRow != 0 ? byRow : a.pile.index.compareTo(b.pile.index);
-      });
+    final list =
+        geo.placements.values
+            .where((p) => p.pile.kind == PileKind.tableau)
+            .toList()
+          ..sort((a, b) {
+            final byRow = a.index.compareTo(b.index);
+            return byRow != 0 ? byRow : a.pile.index.compareTo(b.pile.index);
+          });
     return {for (var i = 0; i < list.length; i++) list[i].card.id: i};
   }
 }
@@ -464,7 +464,10 @@ class _SlotsPainter extends CustomPainter {
       false,
       paint,
     );
-    final tip = Offset(c.dx + r * math.cos(-math.pi * 0.35), c.dy + r * math.sin(-math.pi * 0.35));
+    final tip = Offset(
+      c.dx + r * math.cos(-math.pi * 0.35),
+      c.dy + r * math.sin(-math.pi * 0.35),
+    );
     final path = Path()
       ..moveTo(tip.dx - r * 0.45, tip.dy - r * 0.2)
       ..lineTo(tip.dx, tip.dy)

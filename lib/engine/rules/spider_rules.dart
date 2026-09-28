@@ -110,18 +110,14 @@ final class SpiderRules extends GameRules {
         rest = rest.revealTop();
         delta += LivePoints.reveal;
       }
-      next = next.withPiles([
-        rest,
-        next.foundations[slot].push(run.reversed),
-      ]);
+      next = next.withPiles([rest, next.foundations[slot].push(run.reversed)]);
       delta += LivePoints.spiderSuite;
     }
     return next.copyWith(points: state.points + delta);
   }
 
   @override
-  bool isWon(GameState state) =>
-      state.foundations.every((f) => f.length == 13);
+  bool isWon(GameState state) => state.foundations.every((f) => f.length == 13);
 
   @override
   List<Move> legalMoves(GameState state) {

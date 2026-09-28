@@ -58,8 +58,7 @@ final class Profile {
     'wallet': wallet.toJson(),
     'inventory': inventory.toJson(),
     'achievements': {
-      for (final e in achievements.entries)
-        e.key: e.value.toIso8601String(),
+      for (final e in achievements.entries) e.key: e.value.toIso8601String(),
     },
     'dailies': dailies.toJson(),
     'settings': settings.toJson(),

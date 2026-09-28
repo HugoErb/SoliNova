@@ -125,13 +125,7 @@ class PlayTab extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
       children: [
-        const Row(
-          children: [
-            _LevelRing(),
-            Spacer(),
-            PointsChip(),
-          ],
-        ),
+        const Row(children: [_LevelRing(), Spacer(), PointsChip()]),
         const SizedBox(height: 28),
         Row(
           children: [
@@ -163,7 +157,11 @@ class PlayTab extends ConsumerWidget {
                     color: scheme.primary,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Icon(Icons.play_arrow_rounded, color: scheme.onPrimary, size: 30),
+                  child: Icon(
+                    Icons.play_arrow_rounded,
+                    color: scheme.onPrimary,
+                    size: 30,
+                  ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -172,7 +170,10 @@ class PlayTab extends ConsumerWidget {
                     children: [
                       const Text(
                         'Continuer',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -180,7 +181,10 @@ class PlayTab extends ConsumerWidget {
                         '${session.mode.fullName}\n'
                         '${session.moveCount} coups en '
                         '${formatDuration(ref.read(gameProvider.notifier).elapsed.value)}',
-                        style: TextStyle(color: scheme.onSurfaceVariant, height: 1.35),
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          height: 1.35,
+                        ),
                       ),
                     ],
                   ),
@@ -237,7 +241,10 @@ class PlayTab extends ConsumerWidget {
                     '${c.mode.fullName}\n${c.objective.describe()}',
                   ),
                   isThreeLine: true,
-                  trailing: Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
+                  trailing: Icon(
+                    Icons.chevron_right_rounded,
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
             ],
           ),
@@ -257,10 +264,26 @@ class _QuickLinks extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final links = [
-      (Icons.bar_chart_rounded, 'Statistiques', () => Navigator.of(context).push(StatisticsScreen.route())),
-      (Icons.palette_rounded, 'Thèmes', () => Navigator.of(context).push(ShopScreen.route(themesOnly: true))),
-      (Icons.menu_book_rounded, 'Règles', () => Navigator.of(context).push(rulesRoute())),
-      (Icons.tune_rounded, 'Paramètres', () => Navigator.of(context).push(settingsRoute())),
+      (
+        Icons.bar_chart_rounded,
+        'Statistiques',
+        () => Navigator.of(context).push(StatisticsScreen.route()),
+      ),
+      (
+        Icons.palette_rounded,
+        'Thèmes',
+        () => Navigator.of(context).push(ShopScreen.route(themesOnly: true)),
+      ),
+      (
+        Icons.menu_book_rounded,
+        'Règles',
+        () => Navigator.of(context).push(rulesRoute()),
+      ),
+      (
+        Icons.tune_rounded,
+        'Paramètres',
+        () => Navigator.of(context).push(settingsRoute()),
+      ),
     ];
     return Row(
       children: [
@@ -279,7 +302,10 @@ class _QuickLinks extends StatelessWidget {
                       label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ],
                 ),
@@ -301,9 +327,21 @@ class _StatusDot extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return switch (status) {
-      ChallengeStatus.succeeded => Icon(Icons.check_circle_rounded, color: scheme.primary, semanticLabel: 'Réussi'),
-      ChallengeStatus.inProgress => Icon(Icons.timelapse_rounded, color: scheme.onSurface, semanticLabel: 'En cours'),
-      ChallengeStatus.notStarted => Icon(Icons.radio_button_unchecked_rounded, color: scheme.onSurfaceVariant, semanticLabel: 'À faire'),
+      ChallengeStatus.succeeded => Icon(
+        Icons.check_circle_rounded,
+        color: scheme.primary,
+        semanticLabel: 'Réussi',
+      ),
+      ChallengeStatus.inProgress => Icon(
+        Icons.timelapse_rounded,
+        color: scheme.onSurface,
+        semanticLabel: 'En cours',
+      ),
+      ChallengeStatus.notStarted => Icon(
+        Icons.radio_button_unchecked_rounded,
+        color: scheme.onSurfaceVariant,
+        semanticLabel: 'À faire',
+      ),
     };
   }
 }
@@ -318,7 +356,8 @@ class _LevelRing extends ConsumerWidget {
     final info = xp.levelInfo;
     final scheme = Theme.of(context).colorScheme;
     return Semantics(
-      label: 'Niveau ${info.level}, ${info.xpIntoLevel} XP sur ${info.xpForNextLevel}',
+      label:
+          'Niveau ${info.level}, ${info.xpIntoLevel} XP sur ${info.xpForNextLevel}',
       excludeSemantics: true,
       child: Row(
         children: [
@@ -330,11 +369,18 @@ class _LevelRing extends ConsumerWidget {
               duration: const Duration(milliseconds: 700),
               curve: Curves.easeOutCubic,
               builder: (context, v, _) => CustomPaint(
-                painter: _RingPainter(v, scheme.primary, scheme.onSurface.withValues(alpha: 0.12)),
+                painter: _RingPainter(
+                  v,
+                  scheme.primary,
+                  scheme.onSurface.withValues(alpha: 0.12),
+                ),
                 child: Center(
                   child: Text(
                     '${info.level}',
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ),
@@ -344,10 +390,16 @@ class _LevelRing extends ConsumerWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Niveau', style: TextStyle(fontWeight: FontWeight.w800)),
+              const Text(
+                'Niveau',
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
               Text(
                 '${info.xpIntoLevel} / ${info.xpForNextLevel} XP',
-                style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5),
+                style: TextStyle(
+                  color: scheme.onSurfaceVariant,
+                  fontSize: 12.5,
+                ),
               ),
             ],
           ),
@@ -372,9 +424,16 @@ class _RingPainter extends CustomPainter {
       ..strokeWidth = 4
       ..strokeCap = StrokeCap.round;
     canvas.drawArc(rect, 0, math.pi * 2, false, base..color = track);
-    canvas.drawArc(rect, -math.pi / 2, math.pi * 2 * value, false, base..color = color);
+    canvas.drawArc(
+      rect,
+      -math.pi / 2,
+      math.pi * 2 * value,
+      false,
+      base..color = color,
+    );
   }
 
   @override
-  bool shouldRepaint(_RingPainter old) => old.value != value || old.color != color;
+  bool shouldRepaint(_RingPainter old) =>
+      old.value != value || old.color != color;
 }

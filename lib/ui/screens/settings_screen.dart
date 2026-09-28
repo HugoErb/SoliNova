@@ -30,19 +30,27 @@ class SettingsScreen extends ConsumerWidget {
       return id == null ? fallback : (ShopCatalog.byId(id)?.name ?? fallback);
     }
 
-    Widget toggle(String title, String? subtitle, bool value, ValueChanged<bool> onChanged) =>
-        SwitchListTile(
-          title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-          subtitle: subtitle == null ? null : Text(subtitle),
-          value: value,
-          onChanged: onChanged,
-        );
+    Widget toggle(
+      String title,
+      String? subtitle,
+      bool value,
+      ValueChanged<bool> onChanged,
+    ) => SwitchListTile(
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+      subtitle: subtitle == null ? null : Text(subtitle),
+      value: value,
+      onChanged: onChanged,
+    );
 
     Widget link(String title, String value, ShopCategory category) => ListTile(
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
       subtitle: Text(value),
-      trailing: Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
-      onTap: () => Navigator.of(context).push(ShopScreen.route(category: category)),
+      trailing: Icon(
+        Icons.chevron_right_rounded,
+        color: scheme.onSurfaceVariant,
+      ),
+      onTap: () =>
+          Navigator.of(context).push(ShopScreen.route(category: category)),
     );
 
     Widget group(List<Widget> children) => Panel(
@@ -55,7 +63,9 @@ class SettingsScreen extends ConsumerWidget {
       children: [
         const SectionTitle('Son'),
         group([
-          toggle('Effets sonores', 'Sons discrets pendant la partie', s.sound, (v) {
+          toggle('Effets sonores', 'Sons discrets pendant la partie', s.sound, (
+            v,
+          ) {
             set((x) => x.copyWith(sound: v));
             if (v) ref.read(feedbackProvider).emit(FeedbackEvent.foundation);
           }),
@@ -69,9 +79,14 @@ class SettingsScreen extends ConsumerWidget {
                     value: s.soundVolume,
                     divisions: 10,
                     label: '${(s.soundVolume * 100).round()} %',
-                    semanticFormatterCallback: (v) => 'Volume ${(v * 100).round()} %',
-                    onChanged: s.sound ? (v) => set((x) => x.copyWith(soundVolume: v)) : null,
-                    onChangeEnd: (_) => ref.read(feedbackProvider).emit(FeedbackEvent.foundation),
+                    semanticFormatterCallback: (v) =>
+                        'Volume ${(v * 100).round()} %',
+                    onChanged: s.sound
+                        ? (v) => set((x) => x.copyWith(soundVolume: v))
+                        : null,
+                    onChangeEnd: (_) => ref
+                        .read(feedbackProvider)
+                        .emit(FeedbackEvent.foundation),
                   ),
                 ),
                 Icon(Icons.volume_up_rounded, color: scheme.onSurfaceVariant),
@@ -104,14 +119,27 @@ class SettingsScreen extends ConsumerWidget {
         ]),
         const SectionTitle('Affichage'),
         group([
-          toggle('Afficher le score', null, s.showScore, (v) => set((x) => x.copyWith(showScore: v))),
-          toggle('Afficher le chronomètre', null, s.showTimer, (v) => set((x) => x.copyWith(showTimer: v))),
+          toggle(
+            'Afficher le score',
+            null,
+            s.showScore,
+            (v) => set((x) => x.copyWith(showScore: v)),
+          ),
+          toggle(
+            'Afficher le chronomètre',
+            null,
+            s.showTimer,
+            (v) => set((x) => x.copyWith(showTimer: v)),
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text('Animations', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                const Text(
+                  'Animations',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                ),
                 const SizedBox(height: 10),
                 SegmentedButton<AnimationSpeed>(
                   segments: [
@@ -120,7 +148,8 @@ class SettingsScreen extends ConsumerWidget {
                   ],
                   selected: {s.animations},
                   showSelectedIcon: false,
-                  onSelectionChanged: (v) => set((x) => x.copyWith(animations: v.first)),
+                  onSelectionChanged: (v) =>
+                      set((x) => x.copyWith(animations: v.first)),
                 ),
               ],
             ),
@@ -130,12 +159,13 @@ class SettingsScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text('Mode sombre', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                const Text(
+                  'Mode sombre',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                ),
                 const SizedBox(height: 4),
                 Text(
-                  hasVariant
-                      ? 'Ce thème existe en version claire et sombre.'
-                      : 'Le thème actuel a une seule version : ce réglage s\'appliquera aux thèmes Minimal clair et Pastel.',
+                  hasVariant ? 'Ce thème existe en version claire et sombre.' : 'Le thème actuel a une seule version : ce réglage s\'appliquera aux thèmes Minimal clair et Pastel.',
                   style: TextStyle(color: scheme.onSurfaceVariant),
                 ),
                 const SizedBox(height: 10),
@@ -146,7 +176,8 @@ class SettingsScreen extends ConsumerWidget {
                   ],
                   selected: {s.darkMode},
                   showSelectedIcon: false,
-                  onSelectionChanged: (v) => set((x) => x.copyWith(darkMode: v.first)),
+                  onSelectionChanged: (v) =>
+                      set((x) => x.copyWith(darkMode: v.first)),
                 ),
               ],
             ),
@@ -154,9 +185,21 @@ class SettingsScreen extends ConsumerWidget {
         ]),
         const SectionTitle('Apparence'),
         group([
-          link('Thème', nameOf(ShopCategory.theme, fallback: 'Classique vert'), ShopCategory.theme),
-          link('Style des cartes', nameOf(ShopCategory.cardFace, fallback: 'Classique'), ShopCategory.cardFace),
-          link('Dos des cartes', nameOf(ShopCategory.cardBack), ShopCategory.cardBack),
+          link(
+            'Thème',
+            nameOf(ShopCategory.theme, fallback: 'Classique vert'),
+            ShopCategory.theme,
+          ),
+          link(
+            'Style des cartes',
+            nameOf(ShopCategory.cardFace, fallback: 'Classique'),
+            ShopCategory.cardFace,
+          ),
+          link(
+            'Dos des cartes',
+            nameOf(ShopCategory.cardBack),
+            ShopCategory.cardBack,
+          ),
           link('Fond de table', nameOf(ShopCategory.table), ShopCategory.table),
         ]),
         const SizedBox(height: 16),

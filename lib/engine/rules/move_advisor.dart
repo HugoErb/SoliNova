@@ -12,11 +12,15 @@ final class MoveAdvice {
     required this.instruction,
     required this.reason,
     required this.points,
+    this.winning = false,
   });
 
   final Move move;
   final String instruction;
   final String reason;
+
+  /// Vrai si le coup fait partie d'une suite gagnante trouvée par le solveur.
+  final bool winning;
 
   /// Variation réelle des points de jeu, avant le coût de l'aide.
   final int points;
@@ -25,6 +29,24 @@ final class MoveAdvice {
 /// Évalue les effets des coups pertinents : progression d'abord, points ensuite.
 /// Cette estimation locale ne garantit pas une solution jusqu'à la victoire.
 abstract final class MoveAdvisor {
+  /// Explique un coup choisi ailleurs (par exemple par le solveur).
+  static MoveAdvice explain(
+    GameRules rules,
+    GameState state,
+    Move move, {
+    bool winning = false,
+  }) {
+    final next = rules.apply(state, move);
+    final (_, reason) = _evaluate(rules, state, next, move);
+    return MoveAdvice(
+      move: move,
+      instruction: _instruction(state, move),
+      reason: reason,
+      points: next.points - state.points,
+      winning: winning,
+    );
+  }
+
   static MoveAdvice? best(
     GameRules rules,
     GameState state, {

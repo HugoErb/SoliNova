@@ -21,8 +21,13 @@ final class _TextCache {
     FontWeight weight, {
     double letterSpacing = 0,
   }) {
-    final key = (text, (size * 4).roundToDouble() / 4, color.toARGB32(),
-        (letterSpacing * 100).round(), weight);
+    final key = (
+      text,
+      (size * 4).roundToDouble() / 4,
+      color.toARGB32(),
+      (letterSpacing * 100).round(),
+      weight,
+    );
     return _cache.putIfAbsent(key, () {
       if (_cache.length > 600) _cache.clear();
       return TextPainter(
@@ -52,32 +57,28 @@ const _white = Color(0xFFFFFFFF);
 /// Couleurs d'une carte selon son enseigne et le style de face. Les styles
 /// « classiques » gardent le papier du thème ; les autres imposent le leur.
 FaceColors faceColors(Suit suit, CardFacePalette face, FaceStyle style) {
-  FaceColors on(Color paper, Color ink, [Color edge = const Color(0x33000000)]) =>
-      (paper: paper, ink: ink, edge: edge);
+  FaceColors on(
+    Color paper,
+    Color ink, [
+    Color edge = const Color(0x33000000),
+  ]) => (paper: paper, ink: ink, edge: edge);
   return switch (style) {
-    FaceStyle.fourColor => on(
-      face.paper,
-      switch (suit) {
-        Suit.spades => face.black,
-        Suit.hearts => face.red,
-        Suit.diamonds => const Color(0xFF1F66C9),
-        Suit.clubs => const Color(0xFF16804A),
-      },
-      face.edge,
-    ),
+    FaceStyle.fourColor => on(face.paper, switch (suit) {
+      Suit.spades => face.black,
+      Suit.hearts => face.red,
+      Suit.diamonds => const Color(0xFF1F66C9),
+      Suit.clubs => const Color(0xFF16804A),
+    }, face.edge),
     FaceStyle.solid => on(
       suit.isRed ? const Color(0xFFC8324A) : const Color(0xFF232A3A),
       _white,
     ),
-    FaceStyle.solidFour => on(
-      switch (suit) {
-        Suit.spades => const Color(0xFF232A3A),
-        Suit.hearts => const Color(0xFFC8324A),
-        Suit.diamonds => const Color(0xFF1F5FB8),
-        Suit.clubs => const Color(0xFF16784A),
-      },
-      _white,
-    ),
+    FaceStyle.solidFour => on(switch (suit) {
+      Suit.spades => const Color(0xFF232A3A),
+      Suit.hearts => const Color(0xFFC8324A),
+      Suit.diamonds => const Color(0xFF1F5FB8),
+      Suit.clubs => const Color(0xFF16784A),
+    }, _white),
     FaceStyle.colored => switch (suit) {
       Suit.spades => on(const Color(0xFFE4E7EE), const Color(0xFF1B2233)),
       Suit.hearts => on(const Color(0xFFFBE0E6), const Color(0xFFB0243C)),
@@ -85,16 +86,12 @@ FaceColors faceColors(Suit suit, CardFacePalette face, FaceStyle style) {
       Suit.clubs => on(const Color(0xFFDDF3E6), const Color(0xFF136B3E)),
     },
     // Rouges en tons chauds, noires en tons froids.
-    FaceStyle.neon => on(
-      const Color(0xFF0E0F14),
-      switch (suit) {
-        Suit.hearts => const Color(0xFFFF4F8B),
-        Suit.diamonds => const Color(0xFFFF9A3C),
-        Suit.spades => const Color(0xFF3FE6FF),
-        Suit.clubs => const Color(0xFF8FA8FF),
-      },
-      const Color(0x40FFFFFF),
-    ),
+    FaceStyle.neon => on(const Color(0xFF0E0F14), switch (suit) {
+      Suit.hearts => const Color(0xFFFF4F8B),
+      Suit.diamonds => const Color(0xFFFF9A3C),
+      Suit.spades => const Color(0xFF3FE6FF),
+      Suit.clubs => const Color(0xFF8FA8FF),
+    }, const Color(0x40FFFFFF)),
     FaceStyle.retro => on(
       const Color(0xFFF3E9D2),
       suit.isRed ? const Color(0xFFA8321F) : const Color(0xFF1F2F4F),
@@ -126,11 +123,7 @@ double _indexFontSize(double width, FaceStyle style) => switch (style) {
 
 /// Peint la face ou le dos d'une carte.
 final class CardPainter extends CustomPainter {
-  const CardPainter({
-    required this.card,
-    required this.look,
-    this.showFace,
-  });
+  const CardPainter({required this.card, required this.look, this.showFace});
 
   final model.Card card;
   final Look look;
@@ -215,7 +208,10 @@ final class CardPainter extends CustomPainter {
       small,
       small,
     );
-    canvas.drawPath(SuitPaths.inRect(card.suit, smallRect), Paint()..color = ink);
+    canvas.drawPath(
+      SuitPaths.inRect(card.suit, smallRect),
+      Paint()..color = ink,
+    );
 
     // Centre : grande enseigne, ou monogramme pour les figures.
     final strip = indexStripHeight(w, style);
@@ -246,7 +242,8 @@ final class CardPainter extends CustomPainter {
         Paint()..color = ink.withValues(alpha: 0.9),
       );
     } else {
-      final big = math.min(bodyH * 0.78, w * 0.56) *
+      final big =
+          math.min(bodyH * 0.78, w * 0.56) *
           (style == FaceStyle.large ? 0.8 : 1);
       canvas.drawPath(
         SuitPaths.inRect(
@@ -325,7 +322,11 @@ final class CardPainter extends CustomPainter {
             canvas.drawPath(
               MotifPaths.inRect(
                 back.motif!,
-                Rect.fromCenter(center: Offset(x, y), width: small, height: small),
+                Rect.fromCenter(
+                  center: Offset(x, y),
+                  width: small,
+                  height: small,
+                ),
               ),
               fill,
             );

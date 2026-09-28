@@ -75,7 +75,10 @@ final class BoardGeometry {
     final gap = (size.width * (cols >= 10 ? 0.008 : 0.014)).clamp(2.0, 8.0);
     var cardW = (size.width - 2 * pad - gap * (cols - 1)) / cols;
     // Sur un écran très court, la hauteur limite aussi la taille des cartes.
-    cardW = math.min(cardW, size.height * 0.16 / aspect * (cols >= 10 ? 1.1 : 1));
+    cardW = math.min(
+      cardW,
+      size.height * 0.16 / aspect * (cols >= 10 ? 1.1 : 1),
+    );
     cardW = math.min(cardW, 96);
     // Si la colonne la plus chargée ne tient pas lisiblement, on réduit
     // légèrement la largeur des cartes (au plus 20 %) plutôt que de
@@ -157,7 +160,11 @@ final class BoardGeometry {
         slots[PileRef.stock] = base;
         for (var i = 0; i < stock.length; i++) {
           final g = i ~/ 10;
-          place(stock, i, base.shift(Offset(-(groups - 1 - g) * cardW * 0.18, 0)));
+          place(
+            stock,
+            i,
+            base.shift(Offset(-(groups - 1 - g) * cardW * 0.18, 0)),
+          );
         }
     }
 

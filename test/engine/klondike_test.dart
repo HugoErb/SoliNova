@@ -165,7 +165,12 @@ void main() {
 
   group('Klondike — pioche', () {
     test('tirage 1 et 3 cartes', () {
-      final stock = [c(1, s, up: false), c(2, s, up: false), c(3, s, up: false), c(4, s, up: false)];
+      final stock = [
+        c(1, s, up: false),
+        c(2, s, up: false),
+        c(3, s, up: false),
+        c(4, s, up: false),
+      ];
       final st1 = board(GameMode.klondike1, stock: stock);
       final a = k1.apply(st1, const DrawMove());
       expect(a.waste.length, 1);
@@ -182,10 +187,7 @@ void main() {
     });
 
     test('recyclage : ordre restauré, faces cachées, pénalité en tirage 1', () {
-      final st = board(
-        GameMode.klondike1,
-        waste: [c(1, s), c(2, s), c(3, s)],
-      );
+      final st = board(GameMode.klondike1, waste: [c(1, s), c(2, s), c(3, s)]);
       expect(k1.isLegal(st, const DrawMove()), isFalse);
       expect(k1.isLegal(st, const RecycleMove()), isTrue);
       final next = k1.apply(st, const RecycleMove());
@@ -267,7 +269,10 @@ void main() {
         foundations: [run(h, 2)],
       );
       final m = k1.bestMoveFor(st, const PileRef.tableau(0), 1);
-      expect(m, const TransferMove(from: PileRef.tableau(0), to: PileRef.foundation(0)));
+      expect(
+        m,
+        const TransferMove(from: PileRef.tableau(0), to: PileRef.foundation(0)),
+      );
     });
   });
 

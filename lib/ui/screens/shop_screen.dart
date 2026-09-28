@@ -33,9 +33,8 @@ class ShopScreen extends StatelessWidget {
 
   static Route<void> route({bool themesOnly = false, ShopCategory? category}) =>
       MaterialPageRoute<void>(
-        builder: (_) => ShopScreen(
-          category: themesOnly ? ShopCategory.theme : category,
-        ),
+        builder: (_) =>
+            ShopScreen(category: themesOnly ? ShopCategory.theme : category),
       );
 
   @override
@@ -43,12 +42,7 @@ class ShopScreen extends StatelessWidget {
     body: Stack(
       children: [
         const Positioned.fill(child: TableBackground()),
-        SafeArea(
-          child: _ShopBody(
-            inTab: false,
-            initial: category,
-          ),
-        ),
+        SafeArea(child: _ShopBody(inTab: false, initial: category)),
       ],
     ),
   );
@@ -93,7 +87,10 @@ class _ShopBodyState extends ConsumerState<_ShopBody> {
                     _category == ShopCategory.theme && !widget.inTab
                         ? 'Thèmes'
                         : 'Boutique',
-                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
                 const PointsChip(),
@@ -217,16 +214,33 @@ class _ItemTile extends ConsumerWidget {
                 Row(
                   children: [
                     if (equipped) ...[
-                      Icon(Icons.check_circle_rounded, size: 16, color: scheme.primary),
+                      Icon(
+                        Icons.check_circle_rounded,
+                        size: 16,
+                        color: scheme.primary,
+                      ),
                       const SizedBox(width: 4),
-                      Text('Équipé', style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700)),
+                      Text(
+                        'Équipé',
+                        style: TextStyle(
+                          color: scheme.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ] else if (owned)
                       Text(
                         item.isFree ? 'Gratuit' : 'Débloqué',
-                        style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w700,
+                        ),
                       )
                     else ...[
-                      Icon(Icons.lock_rounded, size: 14, color: scheme.onSurfaceVariant),
+                      Icon(
+                        Icons.lock_rounded,
+                        size: 14,
+                        color: scheme.onSurfaceVariant,
+                      ),
                       const SizedBox(width: 4),
                       NovaStar(size: 12, color: scheme.primary),
                       const SizedBox(width: 4),
@@ -283,7 +297,9 @@ class _ItemSheet extends ConsumerWidget {
       ),
     );
     if (ok != true || !context.mounted) return;
-    final (outcome, unlocked) = ref.read(profileProvider.notifier).purchase(item.id);
+    final (outcome, unlocked) = ref
+        .read(profileProvider.notifier)
+        .purchase(item.id);
     if (!context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     final message = switch (outcome) {
@@ -324,17 +340,35 @@ class _ItemSheet extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 16),
-            Text(item.name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
+            Text(
+              item.name,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+            ),
             const SizedBox(height: 2),
-            Text(item.category.label, style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700)),
+            Text(
+              item.category.label,
+              style: TextStyle(
+                color: scheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
             const SizedBox(height: 8),
-            Text(item.description, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 15)),
+            Text(
+              item.description,
+              style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 15),
+            ),
             const SizedBox(height: 20),
             if (equipped)
-              const SecondaryButton(label: 'Équipé', icon: Icons.check_rounded, onPressed: null)
+              const SecondaryButton(
+                label: 'Équipé',
+                icon: Icons.check_rounded,
+                onPressed: null,
+              )
             else if (owned)
               PrimaryButton(
-                label: item.category == ShopCategory.theme ? 'Activer' : 'Équiper',
+                label: item.category == ShopCategory.theme
+                    ? 'Activer'
+                    : 'Équiper',
                 icon: Icons.check_rounded,
                 onPressed: () {
                   ref.read(profileProvider.notifier).equip(item.id);
@@ -345,7 +379,9 @@ class _ItemSheet extends ConsumerWidget {
               PrimaryButton(
                 label: 'Acheter pour ${formatNumber(item.price)} points',
                 icon: Icons.lock_open_rounded,
-                onPressed: canAfford ? () => unawaited(_buy(context, ref)) : null,
+                onPressed: canAfford
+                    ? () => unawaited(_buy(context, ref))
+                    : null,
               ),
               if (!canAfford) ...[
                 const SizedBox(height: 8),
@@ -371,10 +407,30 @@ class ItemPreview extends ConsumerWidget {
   final ShopItem item;
   final bool large;
 
-  static const _queen = model.Card(id: -1, suit: Suit.hearts, rank: Rank.queen, faceUp: true);
-  static const _ten = model.Card(id: -2, suit: Suit.spades, rank: Rank.ten, faceUp: true);
-  static const _ace = model.Card(id: -3, suit: Suit.diamonds, rank: Rank.ace, faceUp: true);
-  static const _seven = model.Card(id: -4, suit: Suit.clubs, rank: Rank.seven, faceUp: true);
+  static const _queen = model.Card(
+    id: -1,
+    suit: Suit.hearts,
+    rank: Rank.queen,
+    faceUp: true,
+  );
+  static const _ten = model.Card(
+    id: -2,
+    suit: Suit.spades,
+    rank: Rank.ten,
+    faceUp: true,
+  );
+  static const _ace = model.Card(
+    id: -3,
+    suit: Suit.diamonds,
+    rank: Rank.ace,
+    faceUp: true,
+  );
+  static const _seven = model.Card(
+    id: -4,
+    suit: Suit.clubs,
+    rank: Rank.seven,
+    faceUp: true,
+  );
   static const _back = model.Card(id: -5, suit: Suit.spades, rank: Rank.ace);
 
   @override
@@ -386,8 +442,12 @@ class ItemPreview extends ConsumerWidget {
         table: ThemeCatalog.byId(item.id).table,
         back: ThemeCatalog.byId(item.id).back,
       ),
-      ShopCategory.table => current.copyWith(table: ThemeCatalog.tables[item.id]),
-      ShopCategory.cardBack => current.copyWith(back: ThemeCatalog.backs[item.id]),
+      ShopCategory.table => current.copyWith(
+        table: ThemeCatalog.tables[item.id],
+      ),
+      ShopCategory.cardBack => current.copyWith(
+        back: ThemeCatalog.backs[item.id],
+      ),
       ShopCategory.cardFace => current.copyWith(
         faceStyle: FaceStyle.fromShopId(item.id),
       ),
@@ -422,12 +482,22 @@ class ItemPreview extends ConsumerWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(cardW * 0.1),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withValues(alpha: 0.25), blurRadius: 6, offset: const Offset(0, 3)),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.25),
+                      blurRadius: 6,
+                      offset: const Offset(0, 3),
+                    ),
                     if (glow)
-                      BoxShadow(color: look.theme.accent.withValues(alpha: 0.6), blurRadius: 18, spreadRadius: 1),
+                      BoxShadow(
+                        color: look.theme.accent.withValues(alpha: 0.6),
+                        blurRadius: 18,
+                        spreadRadius: 1,
+                      ),
                   ],
                 ),
-                child: CustomPaint(painter: CardPainter(card: m, look: look)),
+                child: CustomPaint(
+                  painter: CardPainter(card: m, look: look),
+                ),
               ),
             );
 
@@ -446,18 +516,30 @@ class ItemPreview extends ConsumerWidget {
               card(_ten, angle: -0.06),
               SizedBox(width: cardW * 0.08),
               card(large ? _queen : _ace),
-              if (large) ...[SizedBox(width: cardW * 0.08), card(_seven, angle: 0.06)],
+              if (large) ...[
+                SizedBox(width: cardW * 0.08),
+                card(_seven, angle: 0.06),
+              ],
             ],
           ),
           ShopCategory.cardBack => Center(child: card(_back)),
-          ShopCategory.animation => _MotionDemo(look: look, child: card(_queen)),
+          ShopCategory.animation => _MotionDemo(
+            look: look,
+            child: card(_queen),
+          ),
           ShopCategory.effect => Center(
             child: Stack(
               alignment: Alignment.center,
               children: [
                 card(_ace, glow: look.effect == EffectStyle.glow),
                 if (look.effect == EffectStyle.sparkle)
-                  IgnorePointer(child: SparkleBurst(color: look.theme.highlight, size: cardW * 1.6, loop: true)),
+                  IgnorePointer(
+                    child: SparkleBurst(
+                      color: look.theme.highlight,
+                      size: cardW * 1.6,
+                      loop: true,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -518,7 +600,8 @@ class _MotionDemo extends StatefulWidget {
   State<_MotionDemo> createState() => _MotionDemoState();
 }
 
-class _MotionDemoState extends State<_MotionDemo> with SingleTickerProviderStateMixin {
+class _MotionDemoState extends State<_MotionDemo>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: widget.look.motion.move * 1,
@@ -567,7 +650,12 @@ class _MotionDemoState extends State<_MotionDemo> with SingleTickerProviderState
 
 /// Gerbe d'étincelles (effet « Étincelles »).
 class SparkleBurst extends StatefulWidget {
-  const SparkleBurst({super.key, required this.color, required this.size, this.loop = false});
+  const SparkleBurst({
+    super.key,
+    required this.color,
+    required this.size,
+    this.loop = false,
+  });
 
   final Color color;
   final double size;
@@ -577,7 +665,8 @@ class SparkleBurst extends StatefulWidget {
   State<SparkleBurst> createState() => _SparkleBurstState();
 }
 
-class _SparkleBurstState extends State<SparkleBurst> with SingleTickerProviderStateMixin {
+class _SparkleBurstState extends State<SparkleBurst>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 700),

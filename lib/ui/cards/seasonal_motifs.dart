@@ -58,13 +58,18 @@ abstract final class MotifPaths {
     return path.transform(m);
   }
 
-  static Path _polygon(List<Offset> points) =>
-      Path()..addPolygon(points, true);
+  static Path _polygon(List<Offset> points) => Path()..addPolygon(points, true);
 
   static Path _blossom() {
     final petals = Path();
     final petal = Path()
-      ..addOval(Rect.fromCenter(center: const Offset(0.5, 0.27), width: 0.28, height: 0.4));
+      ..addOval(
+        Rect.fromCenter(
+          center: const Offset(0.5, 0.27),
+          width: 0.28,
+          height: 0.4,
+        ),
+      );
     for (var k = 0; k < 5; k++) {
       petals.addPath(_rotated(petal, k * 2 * math.pi / 5), Offset.zero);
     }
@@ -135,23 +140,27 @@ abstract final class MotifPaths {
   }
 
   static Path _tree() {
-    final p = _polygon(const [
-      Offset(0.5, 0.14),
-      Offset(0.72, 0.4),
-      Offset(0.28, 0.4),
-    ])
-      ..addPolygon(const [
-        Offset(0.5, 0.28),
-        Offset(0.8, 0.62),
-        Offset(0.2, 0.62),
-      ], true)
-      ..addPolygon(const [
-        Offset(0.5, 0.46),
-        Offset(0.87, 0.84),
-        Offset(0.13, 0.84),
-      ], true)
-      ..addRect(const Rect.fromLTRB(0.43, 0.83, 0.57, 0.96))
-      ..addPath(SuitPaths.star(const Offset(0.5, 0.1), 0.1, waist: 0.4), Offset.zero);
+    final p =
+        _polygon(const [
+            Offset(0.5, 0.14),
+            Offset(0.72, 0.4),
+            Offset(0.28, 0.4),
+          ])
+          ..addPolygon(const [
+            Offset(0.5, 0.28),
+            Offset(0.8, 0.62),
+            Offset(0.2, 0.62),
+          ], true)
+          ..addPolygon(const [
+            Offset(0.5, 0.46),
+            Offset(0.87, 0.84),
+            Offset(0.13, 0.84),
+          ], true)
+          ..addRect(const Rect.fromLTRB(0.43, 0.83, 0.57, 0.96))
+          ..addPath(
+            SuitPaths.star(const Offset(0.5, 0.1), 0.1, waist: 0.4),
+            Offset.zero,
+          );
     return p;
   }
 
@@ -166,25 +175,26 @@ abstract final class MotifPaths {
         Offset(0.58, 0.1),
         Offset(0.55, 0.31),
       ], true);
-    final face = _polygon(const [
-      Offset(0.28, 0.54),
-      Offset(0.42, 0.54),
-      Offset(0.35, 0.43),
-    ])
-      ..addPolygon(const [
-        Offset(0.58, 0.54),
-        Offset(0.72, 0.54),
-        Offset(0.65, 0.43),
-      ], true)
-      ..addPolygon(const [
-        Offset(0.26, 0.64),
-        Offset(0.74, 0.64),
-        Offset(0.67, 0.77),
-        Offset(0.59, 0.71),
-        Offset(0.5, 0.8),
-        Offset(0.41, 0.71),
-        Offset(0.33, 0.77),
-      ], true);
+    final face =
+        _polygon(const [
+            Offset(0.28, 0.54),
+            Offset(0.42, 0.54),
+            Offset(0.35, 0.43),
+          ])
+          ..addPolygon(const [
+            Offset(0.58, 0.54),
+            Offset(0.72, 0.54),
+            Offset(0.65, 0.43),
+          ], true)
+          ..addPolygon(const [
+            Offset(0.26, 0.64),
+            Offset(0.74, 0.64),
+            Offset(0.67, 0.77),
+            Offset(0.59, 0.71),
+            Offset(0.5, 0.8),
+            Offset(0.41, 0.71),
+            Offset(0.33, 0.77),
+          ], true);
     return Path.combine(PathOperation.difference, body, face);
   }
 

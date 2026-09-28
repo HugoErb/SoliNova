@@ -18,18 +18,46 @@ class MoreTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final entries = [
-      (Icons.bar_chart_rounded, 'Statistiques', 'Globales et par mode', StatisticsScreen.route),
-      (Icons.palette_rounded, 'Thèmes', 'Changer l\'ambiance du jeu', () => ShopScreen.route(themesOnly: true)),
-      (Icons.menu_book_rounded, 'Règles du jeu', 'Klondike, Spider, FreeCell', rulesRoute),
-      (Icons.calculate_rounded, 'Comment le score est calculé', 'Score, XP et points', ScoringScreen.route),
-      (Icons.tune_rounded, 'Paramètres', 'Son, animations, affichage', settingsRoute),
+      (
+        Icons.bar_chart_rounded,
+        'Statistiques',
+        'Globales et par mode',
+        StatisticsScreen.route,
+      ),
+      (
+        Icons.palette_rounded,
+        'Thèmes',
+        'Changer l\'ambiance du jeu',
+        () => ShopScreen.route(themesOnly: true),
+      ),
+      (
+        Icons.menu_book_rounded,
+        'Règles du jeu',
+        'Klondike, Spider, FreeCell',
+        rulesRoute,
+      ),
+      (
+        Icons.calculate_rounded,
+        'Comment le score est calculé',
+        'Score, XP et points',
+        ScoringScreen.route,
+      ),
+      (
+        Icons.tune_rounded,
+        'Paramètres',
+        'Son, animations, affichage',
+        settingsRoute,
+      ),
     ];
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
         const Padding(
           padding: EdgeInsets.fromLTRB(4, 8, 4, 16),
-          child: Text('Plus', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
+          child: Text(
+            'Plus',
+            style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
+          ),
         ),
         Panel(
           padding: const EdgeInsets.symmetric(vertical: 6),
@@ -38,9 +66,15 @@ class MoreTab extends StatelessWidget {
               for (final (icon, title, subtitle, route) in entries)
                 ListTile(
                   leading: Icon(icon, color: scheme.primary),
-                  title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  title: Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
                   subtitle: Text(subtitle),
-                  trailing: Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
+                  trailing: Icon(
+                    Icons.chevron_right_rounded,
+                    color: scheme.onSurfaceVariant,
+                  ),
                   onTap: () => Navigator.of(context).push(route()),
                 ),
             ],
@@ -52,7 +86,10 @@ class MoreTab extends StatelessWidget {
             children: [
               NovaStar(size: 28, color: scheme.primary),
               const SizedBox(height: 8),
-              const Text('SoliNova', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+              const Text(
+                'SoliNova',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+              ),
               Text(
                 'Version 1.0. Fonctionne entièrement hors ligne,\nsans compte ni publicité.',
                 textAlign: TextAlign.center,

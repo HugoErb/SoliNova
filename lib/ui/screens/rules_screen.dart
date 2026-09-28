@@ -144,13 +144,15 @@ const _common = [
     'Glisse une carte (ou une suite) pour la déplacer. Un toucher joue le meilleur '
         'coup disponible, en priorité vers une fondation. Un double toucher envoie '
         'une carte vers sa fondation. Annuler revient au coup précédent. Indice '
-        'explique le meilleur coup estimé : la progression est prioritaire, '
-        'puis les points gagnés. La baguette joue ce même coup automatiquement, '
+        'explique le prochain coup d\'une suite gagnante calculée pour ta '
+        'position. Chaque donne distribuée est gagnable. La baguette joue ce '
+        'même coup automatiquement, '
         'sans explication. Indice : ${ScoreCalculator.hintCost} points de score ; '
         'coup assisté : ${ScoreCalculator.assistedMoveCost} points. '
         'Ces deux aides sont illimitées, même à zéro point. '
         'Elles empêchent de valider les objectifs et succès « sans indice ». '
-        'Le conseil ne garantit pas la victoire.',
+        'Si tu t\'écartes du chemin et que la position est perdue, l\'aide '
+        'te le dit : annule quelques coups.',
   ),
   (
     'Partie commencée',

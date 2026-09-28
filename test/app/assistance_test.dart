@@ -1,13 +1,17 @@
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:solinova/app/game_controller.dart';
 import 'package:solinova/app/providers.dart';
+import 'package:solinova/app/solution_book.dart';
 import 'package:solinova/data/repositories.dart';
 import 'package:solinova/data/storage.dart';
 import 'package:solinova/engine/model/game_mode.dart';
 import 'package:solinova/engine/model/game_state.dart';
 import 'package:solinova/engine/model/move.dart';
 import 'package:solinova/engine/session/game_session.dart';
+import 'package:solinova/engine/solver/winnable_deals.dart';
 import 'package:solinova/meta/economy/wallet.dart';
 import 'package:solinova/meta/profile/profile.dart';
 
@@ -34,6 +38,78 @@ ProviderContainer containerFor(GameState state) {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  for (final mode in GameMode.values) {
+    test(
+      '${mode.fullName} : ne jouer que des coups assistés gagne la partie',
+      () async {
+        final container = ProviderContainer(
+          overrides: [
+            storeProvider.overrideWithValue(MemoryStore()),
+            solutionBookProvider.overrideWithValue(
+              SolutionBook(load: (key) async => File(key).readAsStringSync()),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+        final controller = container.read(gameProvider.notifier);
+        controller.newGame(mode);
+        final seed = container.read(gameProvider).session!.seed;
+        expect(WinnableDeals.seedsOf(mode), contains(seed));
+        await Future<void>.delayed(Duration.zero);
+        final messages = <String>[];
+        final subscription = controller.messages.listen(messages.add);
+        addTearDown(subscription.cancel);
+        for (
+          var i = 0;
+          i < 2000 && container.read(gameProvider).report == null;
+          i++
+        ) {
+          final before = container.read(gameProvider).session!.moveCount;
+          controller.playBestMove();
+          expect(
+            container.read(gameProvider).session!.moveCount,
+            before + 1,
+            reason: 'coup assisté immédiat sur le chemin gagnant',
+          );
+        }
+        expect(container.read(gameProvider).report?.result.won, isTrue);
+        expect(messages, isEmpty);
+        await container.read(profileProvider.notifier).flush();
+        await controller.setForeground(false);
+      },
+    );
+  }
+
+  test('après un écart, le solveur retrouve une suite gagnante', () async {
+    final container = ProviderContainer(
+      overrides: [storeProvider.overrideWithValue(MemoryStore())],
+    );
+    addTearDown(container.dispose);
+    final controller = container.read(gameProvider.notifier);
+    // Donne répertoriée mais sans solution chargée : tout vient du solveur.
+    controller.newGame(
+      GameMode.freecell,
+      seed: WinnableDeals.seedsOf(GameMode.freecell)[3],
+    );
+    final session = container.read(gameProvider).session!;
+    final rules = session.rules;
+    controller.play(rules.legalMoves(session.state).last);
+    controller.hint();
+    // Recherche longue dans un isolat : on attend la réponse.
+    for (var i = 0; i < 600 && container.read(gameProvider).hint == null; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+    expect(container.read(gameProvider).thinking, isNull);
+    final hint = container.read(gameProvider).hint!;
+    expect(hint.advice.winning, isTrue);
+    controller.playBestMove();
+    expect(
+      container.read(gameProvider).session!.turns.last.moves.single,
+      hint.advice.move,
+    );
+    await controller.setForeground(false);
+  });
+
   testWidgets('un indice reste lisible pendant les automatismes de fondation', (
     tester,
   ) async {
@@ -43,7 +119,7 @@ void main() {
         tableau: [
           [c(1, h)],
         ],
-        stock: [c(8, s, up: false)],
+        stock: [c(2, h, up: false)],
       ),
     );
     final controller = container.read(gameProvider.notifier);

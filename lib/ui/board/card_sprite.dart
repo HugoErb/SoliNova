@@ -222,8 +222,7 @@ class _CardSpriteState extends State<CardSprite> with TickerProviderStateMixin {
                   0.12
             : 0.0;
         final scale = 1 + lift * 0.05;
-        final glow = widget.dragging &&
-            widget.look.effect == EffectStyle.glow;
+        final glow = widget.dragging && widget.look.effect == EffectStyle.glow;
         return Transform.translate(
           offset: Offset(rect.left + shakeX, rect.top - lift * 6),
           child: Transform.scale(
@@ -236,9 +235,7 @@ class _CardSpriteState extends State<CardSprite> with TickerProviderStateMixin {
                   borderRadius: BorderRadius.circular(rect.width * 0.1),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(
-                        alpha: 0.16 + lift * 0.18,
-                      ),
+                      color: Colors.black.withValues(alpha: 0.16 + lift * 0.18),
                       blurRadius: 1.5 + lift * 14,
                       offset: Offset(0, 0.8 + lift * 6),
                     ),

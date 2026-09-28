@@ -105,12 +105,18 @@ class _VictorySheetState extends ConsumerState<VictorySheet>
                     const SizedBox(width: 10),
                     const Text(
                       'Victoire',
-                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const Spacer(),
                     Text(
                       result.mode.fullName,
-                      style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -147,7 +153,8 @@ class _VictorySheetState extends ConsumerState<VictorySheet>
                       if (r.records.bestScore) const _Badge('Meilleur score'),
                       if (r.records.bestTime) const _Badge('Meilleur temps'),
                       if (r.records.fewestMoves) const _Badge('Moins de coups'),
-                      if (r.records.longestStreak) const _Badge('Plus longue série'),
+                      if (r.records.longestStreak)
+                        const _Badge('Plus longue série'),
                     ],
                   ),
                 ],
@@ -182,7 +189,9 @@ class _VictorySheetState extends ConsumerState<VictorySheet>
                             children: [
                               Text(
                                 'Défi ${r.challenge!.difficulty.label.toLowerCase()}',
-                                style: const TextStyle(fontWeight: FontWeight.w800),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
                               Text(
                                 r.challengeCompletedNow
@@ -190,7 +199,9 @@ class _VictorySheetState extends ConsumerState<VictorySheet>
                                     : r.challengeProgress?.succeeded == true
                                     ? 'Déjà réussi aujourd\'hui'
                                     : 'Objectif non atteint : ${r.challenge!.objective.describe().toLowerCase()}',
-                                style: TextStyle(color: scheme.onSurfaceVariant),
+                                style: TextStyle(
+                                  color: scheme.onSurfaceVariant,
+                                ),
                               ),
                             ],
                           ),
@@ -201,7 +212,11 @@ class _VictorySheetState extends ConsumerState<VictorySheet>
                 ],
                 for (final a in r.unlocked) ...[
                   const SizedBox(height: 10),
-                  _AchievementRow(title: a.title, subtitle: a.description, tier: a.tier.label),
+                  _AchievementRow(
+                    title: a.title,
+                    subtitle: a.description,
+                    tier: a.tier.label,
+                  ),
                 ],
                 const SizedBox(height: 20),
                 PrimaryButton(
@@ -261,7 +276,9 @@ class _Stat extends StatelessWidget {
         ),
         Text(
           label,
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     ),
@@ -283,7 +300,11 @@ class _Badge extends StatelessWidget {
       ),
       child: Text(
         'Nouveau record : ${text.toLowerCase()}',
-        style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w800, fontSize: 12.5),
+        style: TextStyle(
+          color: scheme.primary,
+          fontWeight: FontWeight.w800,
+          fontSize: 12.5,
+        ),
       ),
     );
   }
@@ -309,7 +330,9 @@ class _RewardsPanel extends StatelessWidget {
           final leveled = after.level > before.level;
           // Barre : part de l'ancienne progression puis se remplit.
           final bar = leveled
-              ? (t < 0.5 ? before.progress + (1 - before.progress) * t * 2 : after.progress * (t - 0.5) * 2)
+              ? (t < 0.5
+                    ? before.progress + (1 - before.progress) * t * 2
+                    : after.progress * (t - 0.5) * 2)
               : before.progress + (after.progress - before.progress) * t;
           final shownLevel = leveled && t >= 0.5 ? after.level : before.level;
           return Column(
@@ -319,13 +342,19 @@ class _RewardsPanel extends StatelessWidget {
                 children: [
                   Text(
                     'Niveau $shownLevel',
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                    ),
                   ),
                   if (leveled && t >= 0.5) ...[
                     const SizedBox(width: 8),
                     Text(
                       'Niveau supérieur',
-                      style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w800),
+                      style: TextStyle(
+                        color: scheme.primary,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ],
                   const Spacer(),
@@ -351,7 +380,10 @@ class _RewardsPanel extends StatelessWidget {
                   if (report.levelUpPoints > 0)
                     Text(
                       'dont ${report.levelUpPoints} de niveau',
-                      style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5),
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: 12.5,
+                      ),
                     ),
                 ],
               ),
@@ -364,7 +396,11 @@ class _RewardsPanel extends StatelessWidget {
 }
 
 class _AchievementRow extends StatelessWidget {
-  const _AchievementRow({required this.title, required this.subtitle, required this.tier});
+  const _AchievementRow({
+    required this.title,
+    required this.subtitle,
+    required this.tier,
+  });
 
   final String title;
   final String subtitle;
@@ -377,18 +413,34 @@ class _AchievementRow extends StatelessWidget {
       color: scheme.primary.withValues(alpha: 0.12),
       child: Row(
         children: [
-          Icon(Icons.workspace_premium_rounded, color: scheme.primary, size: 30),
+          Icon(
+            Icons.workspace_premium_rounded,
+            color: scheme.primary,
+            size: 30,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Succès débloqué : $title', style: const TextStyle(fontWeight: FontWeight.w800)),
-                Text(subtitle, style: TextStyle(color: scheme.onSurfaceVariant)),
+                Text(
+                  'Succès débloqué : $title',
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(color: scheme.onSurfaceVariant),
+                ),
               ],
             ),
           ),
-          Text(tier, style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700)),
+          Text(
+            tier,
+            style: TextStyle(
+              color: scheme.primary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );

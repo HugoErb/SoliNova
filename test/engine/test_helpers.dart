@@ -51,4 +51,6 @@ GameState board(
 }
 
 /// Série As → [upTo] d'une couleur, pour remplir une fondation.
-List<Card> run(Suit suit, int upTo) => [for (var r = 1; r <= upTo; r++) c(r, suit)];
+List<Card> run(Suit suit, int upTo) => [
+  for (var r = 1; r <= upTo; r++) c(r, suit),
+];

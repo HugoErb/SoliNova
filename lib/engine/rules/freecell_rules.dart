@@ -100,7 +100,9 @@ final class FreeCellRules extends GameRules {
     assert(isLegal(state, move), 'Mouvement illégal : $move');
     final m = move as TransferMove;
     final (next, _) = transfer(state, m.from, m.to, m.count);
-    final delta = m.to.kind == PileKind.foundation ? LivePoints.toFoundation : 0;
+    final delta = m.to.kind == PileKind.foundation
+        ? LivePoints.toFoundation
+        : 0;
     return next.copyWith(points: state.points + delta);
   }
 

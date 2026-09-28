@@ -15,6 +15,7 @@ import '../meta/shop/inventory.dart';
 import '../meta/shop/shop_item.dart';
 import '../ui/feedback/feedback_service.dart';
 import '../ui/theme/look.dart';
+import 'solution_book.dart';
 
 /// Stockage local (surchargé au démarrage).
 final storeProvider = Provider<KeyValueStore>((ref) => MemoryStore());
@@ -24,6 +25,9 @@ final initialProfileProvider = Provider<Profile>((ref) => const Profile());
 final initialSessionProvider = Provider<GameSession?>((ref) => null);
 
 final feedbackProvider = Provider<FeedbackService>((ref) => FeedbackService());
+
+/// Solutions des donnes gagnables livrées avec l'application.
+final solutionBookProvider = Provider<SolutionBook>((ref) => SolutionBook());
 
 /// Profil du joueur : statistiques, progression, boutique, paramètres.
 final profileProvider = NotifierProvider<ProfileController, Profile>(
@@ -76,7 +80,8 @@ class ProfileController extends Notifier<Profile> {
     return (outcome, unlocked);
   }
 
-  void equip(String id) => _set(state.copyWith(inventory: state.inventory.equip(id)));
+  void equip(String id) =>
+      _set(state.copyWith(inventory: state.inventory.equip(id)));
 
   void followTheme(ShopCategory category) =>
       _set(state.copyWith(inventory: state.inventory.followTheme(category)));
