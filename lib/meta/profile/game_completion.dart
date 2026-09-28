@@ -41,8 +41,7 @@ final class GameReport {
   /// Série de victoires actuelle dans le mode.
   final int streak;
 
-  int get xpFromChallenge =>
-      challengeCompletedNow ? challenge!.rewardXp : 0;
+  int get xpFromChallenge => challengeCompletedNow ? challenge!.rewardXp : 0;
   int get pointsFromChallenge =>
       challengeCompletedNow ? challenge!.rewardPoints : 0;
   int get xpFromAchievements => unlocked.fold(0, (s, a) => s + a.rewardXp);
@@ -80,12 +79,14 @@ abstract final class GameCompletion {
         elapsedMs: session.elapsedMs,
         moves: session.moveCount,
         hints: session.hintsUsed,
+        assistedMoves: session.assistedMovesUsed,
         undos: session.undoCount,
         previousStreak: previousStreak,
       ),
       elapsedMs: session.elapsedMs,
       moves: session.moveCount,
       hints: session.hintsUsed,
+      assistedMoves: session.assistedMovesUsed,
       undos: session.undoCount,
       finishedAt: now,
       challengeId: session.challengeId,
@@ -179,12 +180,9 @@ abstract final class GameCompletion {
     DateTime now,
   ) {
     final out = _unlock(
-      _Rewards(
-        profile.progress,
-        profile.wallet,
-        profile.inventory,
-        {...profile.achievements},
-      ),
+      _Rewards(profile.progress, profile.wallet, profile.inventory, {
+        ...profile.achievements,
+      }),
       stats: profile.stats,
       dailies: profile.dailies,
       result: null,

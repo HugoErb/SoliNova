@@ -33,7 +33,7 @@ final class ChallengeObjective {
       r.won &&
       (maxSeconds == null || r.elapsedMs <= maxSeconds! * 1000) &&
       (maxMoves == null || r.moves <= maxMoves!) &&
-      (!noHints || r.hints == 0) &&
+      (!noHints || !r.usedAssistance) &&
       (!noUndo || r.undos == 0);
 
   /// Description lisible : « Gagner en moins de 6 min, sans indice ».
@@ -205,7 +205,9 @@ final class ChallengeProgress {
 
   ChallengeStatus get status => succeeded
       ? ChallengeStatus.succeeded
-      : (attempts > 0 ? ChallengeStatus.inProgress : ChallengeStatus.notStarted);
+      : (attempts > 0
+            ? ChallengeStatus.inProgress
+            : ChallengeStatus.notStarted);
 
   Json toJson() => {'a': attempts, 's': succeeded, 'b': bestTimeMs};
 
@@ -233,7 +235,9 @@ final class DailyChallengeLog {
       .length;
 
   bool hardSucceeded() => entries.entries.any(
-    (e) => e.key.endsWith('-${ChallengeDifficulty.hard.name}') && e.value.succeeded,
+    (e) =>
+        e.key.endsWith('-${ChallengeDifficulty.hard.name}') &&
+        e.value.succeeded,
   );
 
   /// Enregistre une tentative terminée. Renvoie aussi si le défi vient
@@ -256,7 +260,8 @@ final class DailyChallengeLog {
       bestTimeMs: best,
     );
     return (
-      DailyChallengeLog({...entries, challenge.id: updated})._pruned(r.finishedAt),
+      DailyChallengeLog({...entries, challenge.id: updated})
+          ._pruned(r.finishedAt),
       firstSuccess,
     );
   }

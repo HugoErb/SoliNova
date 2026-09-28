@@ -53,7 +53,11 @@ class ProgressTab extends ConsumerWidget {
                 children: [
                   Text(
                     'Niveau ${info.level}',
-                    style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w800, height: 1),
+                    style: const TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w800,
+                      height: 1,
+                    ),
                   ),
                   const Spacer(),
                   Text(
@@ -85,9 +89,15 @@ class ProgressTab extends ConsumerWidget {
                       const SizedBox(height: 6),
                       Text(
                         '${count(t)}',
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
-                      Text(t.label, style: TextStyle(color: scheme.onSurfaceVariant)),
+                      Text(
+                        t.label,
+                        style: TextStyle(color: scheme.onSurfaceVariant),
+                      ),
                     ],
                   ),
                 ),
@@ -114,7 +124,11 @@ class ProgressTab extends ConsumerWidget {
             ),
           ),
         for (final a in done)
-          _AchievementTile(achievement: a, ctx: ctx, unlockedAt: unlocked[a.id]),
+          _AchievementTile(
+            achievement: a,
+            ctx: ctx,
+            unlockedAt: unlocked[a.id],
+          ),
       ],
     );
   }
@@ -177,13 +191,24 @@ class _AchievementTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(a.title, style: const TextStyle(fontWeight: FontWeight.w800)),
-                  Text(a.description, style: TextStyle(color: scheme.onSurfaceVariant)),
+                  Text(
+                    a.title,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  Text(
+                    a.description,
+                    style: TextStyle(color: scheme.onSurfaceVariant),
+                  ),
                   if (!unlocked && a.target > 1) ...[
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        Expanded(child: ProgressBar(value: value / a.target, height: 6)),
+                        Expanded(
+                          child: ProgressBar(
+                            value: value / a.target,
+                            height: 6,
+                          ),
+                        ),
                         const SizedBox(width: 10),
                         Text(
                           '$value / ${a.target}',
@@ -198,14 +223,21 @@ class _AchievementTile extends StatelessWidget {
                   if (rewards.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(
-                      unlocked ? 'Obtenu : ${rewards.join(', ')}' : 'Récompense : ${rewards.join(', ')}',
-                      style: TextStyle(color: scheme.primary, fontSize: 12.5, fontWeight: FontWeight.w700),
+                      unlocked
+                          ? 'Obtenu : ${rewards.join(', ')}'
+                          : 'Récompense : ${rewards.join(', ')}',
+                      style: TextStyle(
+                        color: scheme.primary,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ],
                 ],
               ),
             ),
-            if (unlocked) Icon(Icons.check_circle_rounded, color: scheme.primary),
+            if (unlocked)
+              Icon(Icons.check_circle_rounded, color: scheme.primary),
           ],
         ),
       ),
@@ -217,9 +249,8 @@ class _AchievementTile extends StatelessWidget {
 class StatisticsScreen extends ConsumerStatefulWidget {
   const StatisticsScreen({super.key});
 
-  static Route<void> route() => MaterialPageRoute<void>(
-    builder: (_) => const StatisticsScreen(),
-  );
+  static Route<void> route() =>
+      MaterialPageRoute<void>(builder: (_) => const StatisticsScreen());
 
   @override
   ConsumerState<StatisticsScreen> createState() => _StatisticsScreenState();
@@ -253,6 +284,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
       ('Temps total joué :', formatLongDuration(s.timePlayedMs)),
       ('Total de coups :', formatNumber(s.totalMoves)),
       ('Indices utilisés :', '${s.hintsUsed}'),
+      ('Coups assistés :', '${s.assistedMovesUsed}'),
       ('Annulations :', '${s.undosUsed}'),
       if (_mode == null) ...[
         ('Défis terminés :', '${stats.challengesFinished}'),
@@ -273,7 +305,10 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
               child: Row(
                 children: [
                   Expanded(
-                    child: Text(label, style: TextStyle(color: scheme.onSurfaceVariant)),
+                    child: Text(
+                      label,
+                      style: TextStyle(color: scheme.onSurfaceVariant),
+                    ),
                   ),
                   Text(
                     value,
@@ -314,11 +349,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
           duration: const Duration(milliseconds: 220),
           child: Column(
             key: ValueKey(_mode),
-            children: [
-              table(main),
-              const SizedBox(height: 12),
-              table(extra),
-            ],
+            children: [table(main), const SizedBox(height: 12), table(extra)],
           ),
         ),
         const SizedBox(height: 12),

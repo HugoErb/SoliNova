@@ -28,6 +28,7 @@ GameResult result({
   int elapsedMs = 240000,
   int moves = 120,
   int hints = 0,
+  int assistedMoves = 0,
   int undos = 0,
   int gamePoints = 600,
   int previousStreak = 0,
@@ -44,18 +45,31 @@ GameResult result({
     elapsedMs: elapsedMs,
     moves: moves,
     hints: hints,
+    assistedMoves: assistedMoves,
     undos: undos,
     previousStreak: previousStreak,
   ),
   elapsedMs: elapsedMs,
   moves: moves,
   hints: hints,
+  assistedMoves: assistedMoves,
   undos: undos,
   finishedAt: at ?? _now,
   challengeId: challengeId,
 );
 
 void main() {
+  test('les coups assistés sont comptés et exclus des objectifs sans aide', () {
+    final assisted = result(assistedMoves: 1);
+    expect(const ChallengeObjective(noHints: true).isMetBy(assisted), isFalse);
+    final (profile, report) = GameCompletion.apply(const Profile(), assisted);
+    expect(report.unlocked.map((a) => a.id), isNot(contains('no_hint')));
+    expect(report.unlocked.map((a) => a.id), isNot(contains('purist')));
+    final restored = Profile.fromJson(profile.toJson());
+    expect(restored.stats.global.assistedMovesUsed, 1);
+    expect(restored.stats.global.hintsUsed, 0);
+  });
+
   group('Statistiques', () {
     test('parties, victoires, moyennes et records', () {
       var s = const ModeStats();
@@ -106,7 +120,11 @@ void main() {
       var st = const Statistics();
       NewRecords rec;
       (st, rec) = st.record(result(elapsedMs: 300000));
-      expect(rec.bestTime, isFalse, reason: 'premier temps : pas un record battu');
+      expect(
+        rec.bestTime,
+        isFalse,
+        reason: 'premier temps : pas un record battu',
+      );
       (st, rec) = st.record(result(elapsedMs: 200000));
       expect(rec.bestTime, isTrue);
     });
@@ -129,7 +147,10 @@ void main() {
     });
 
     test('défaite : XP seulement si réellement jouée', () {
-      expect(XpRules.forGame(result(won: false, moves: 5, elapsedMs: 10000)), 0);
+      expect(
+        XpRules.forGame(result(won: false, moves: 5, elapsedMs: 10000)),
+        0,
+      );
       expect(
         XpRules.forGame(result(won: false, moves: 40, elapsedMs: 120000)),
         XpRules.lossXp,
@@ -156,15 +177,17 @@ void main() {
       final morning = DailyChallengeGenerator.forDay(DateTime(2026, 9, 27, 7));
       final evening = DailyChallengeGenerator.forDay(DateTime(2026, 9, 27, 23));
       expect(morning.length, 3);
-      expect(
-        [for (final c in morning) c.difficulty],
-        ChallengeDifficulty.values,
-      );
+      expect([
+        for (final c in morning) c.difficulty,
+      ], ChallengeDifficulty.values);
       for (var i = 0; i < 3; i++) {
         expect(morning[i].id, evening[i].id);
         expect(morning[i].seed, evening[i].seed);
         expect(morning[i].mode, evening[i].mode);
-        expect(morning[i].objective.describe(), evening[i].objective.describe());
+        expect(
+          morning[i].objective.describe(),
+          evening[i].objective.describe(),
+        );
       }
     });
 
@@ -207,7 +230,10 @@ void main() {
       final c = DailyChallengeGenerator.forDay(_now).first;
       var log = const DailyChallengeLog();
       bool first;
-      (log, first) = log.recordAttempt(c, result(won: false, challengeId: c.id));
+      (log, first) = log.recordAttempt(
+        c,
+        result(won: false, challengeId: c.id),
+      );
       expect(first, isFalse);
       expect(log.of(c.id).status, ChallengeStatus.inProgress);
       (log, first) = log.recordAttempt(c, result(challengeId: c.id));
@@ -401,16 +427,19 @@ void main() {
       expect(p.wallet.balance, 0);
     });
 
-    test('écritures regroupées : seule la dernière valeur est écrite', () async {
-      final written = <int>[];
-      final saver = DebouncedSaver<int>((v) async => written.add(v));
-      saver
-        ..schedule(1)
-        ..schedule(2)
-        ..schedule(3);
-      await saver.flush();
-      expect(written, [3]);
-    });
+    test(
+      'écritures regroupées : seule la dernière valeur est écrite',
+      () async {
+        final written = <int>[];
+        final saver = DebouncedSaver<int>((v) async => written.add(v));
+        saver
+          ..schedule(1)
+          ..schedule(2)
+          ..schedule(3);
+        await saver.flush();
+        expect(written, [3]);
+      },
+    );
 
     test('effacement exécuté après une écriture en cours', () async {
       final log = <String>[];

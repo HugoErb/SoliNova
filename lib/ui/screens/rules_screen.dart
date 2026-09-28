@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../engine/model/game_mode.dart';
+import '../../engine/scoring/score_calculator.dart';
 import '../widgets/common.dart';
 
 /// Section de règles.
@@ -121,8 +122,14 @@ const Map<GameFamily, List<_Rule>> _rules = {
       'Fondations',
       'Même principe qu\'au Klondike. Une carte posée en fondation n\'en ressort pas.',
     ),
-    ('Pioche', 'Il n\'y a pas de pioche : toutes les cartes sont en jeu dès le début.'),
-    ('Victoire', 'La partie est gagnée quand les 52 cartes sont sur les fondations.'),
+    (
+      'Pioche',
+      'Il n\'y a pas de pioche : toutes les cartes sont en jeu dès le début.',
+    ),
+    (
+      'Victoire',
+      'La partie est gagnée quand les 52 cartes sont sur les fondations.',
+    ),
     (
       'Particularités',
       'Presque toutes les donnes peuvent être gagnées : c\'est un jeu de '
@@ -137,7 +144,13 @@ const _common = [
     'Glisse une carte (ou une suite) pour la déplacer. Un toucher joue le meilleur '
         'coup disponible, en priorité vers une fondation. Un double toucher envoie '
         'une carte vers sa fondation. Annuler revient au coup précédent. Indice '
-        'montre un coup valide sans le jouer.',
+        'explique le meilleur coup estimé : la progression est prioritaire, '
+        'puis les points gagnés. La baguette joue ce même coup automatiquement, '
+        'sans explication. Indice : ${ScoreCalculator.hintCost} points de score ; '
+        'coup assisté : ${ScoreCalculator.assistedMoveCost} points. '
+        'Ces deux aides sont illimitées, même à zéro point. '
+        'Elles empêchent de valider les objectifs et succès « sans indice ». '
+        'Le conseil ne garantit pas la victoire.',
   ),
   (
     'Partie commencée',
@@ -189,13 +202,20 @@ class _RulesScreenState extends State<RulesScreen> {
             key: ValueKey(_family),
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              for (final (title, body) in [..._rules[_family]!, ..._common]) ...[
+              for (final (title, body) in [
+                ..._rules[_family]!,
+                ..._common,
+              ]) ...[
                 SectionTitle(title),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: Text(
                     body,
-                    style: TextStyle(fontSize: 15.5, height: 1.5, color: scheme.onSurface),
+                    style: TextStyle(
+                      fontSize: 15.5,
+                      height: 1.5,
+                      color: scheme.onSurface,
+                    ),
                   ),
                 ),
               ],

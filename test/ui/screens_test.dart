@@ -73,7 +73,9 @@ Future<void> loadFonts() async {
   for (final w in [400, 500, 600, 700, 800]) {
     loader.addFont(
       Future.value(
-        ByteData.sublistView(File('assets/fonts/Manrope-$w.ttf').readAsBytesSync()),
+        ByteData.sublistView(
+          File('assets/fonts/Manrope-$w.ttf').readAsBytesSync(),
+        ),
       ),
     );
   }
@@ -121,13 +123,21 @@ void main() {
         testWidgets('partie ${mode.fullName}', (tester) async {
           final container = await pumpApp(tester, entry.value);
           container.read(gameProvider.notifier).newGame(mode, seed: 7);
-          final nav = tester.state<NavigatorState>(find.byType(Navigator).first);
+          final nav = tester.state<NavigatorState>(
+            find.byType(Navigator).first,
+          );
           unawaited(nav.push(GameScreen.route()));
           await settle(tester);
           expect(tester.takeException(), isNull);
           expectNoHorizontalScroll(tester);
-          expect(find.text('Annuler'), findsOneWidget);
-          expect(find.text('Indice'), findsOneWidget);
+          expect(find.byTooltip('Annuler'), findsOneWidget);
+          expect(find.byTooltip('Indice (20 points)'), findsOneWidget);
+          expect(
+            find.byTooltip('Jouer le meilleur coup (40 points)'),
+            findsOneWidget,
+          );
+          expect(find.text('Annuler'), findsNothing);
+          expect(find.text('Indice'), findsNothing);
 
           // Un coup puis Annuler, via l'interface.
           final controller = container.read(gameProvider.notifier);
@@ -135,12 +145,32 @@ void main() {
           final move = session.rules.legalMoves(session.state).first;
           expect(controller.play(move), isTrue);
           await settle(tester);
-          await tester.tap(find.text('Annuler'));
+          await tester.tap(find.byTooltip('Annuler'));
           await settle(tester);
           expect(container.read(gameProvider).session!.undoCount, 1);
 
-          await tester.tap(find.text('Indice'));
+          await tester.tap(find.byTooltip('Indice (20 points)'));
           await settle(tester);
+          expect(tester.takeException(), isNull);
+          final hint = container.read(gameProvider).hint!;
+          expect(find.text(hint.advice.instruction), findsOneWidget);
+          expect(find.text(hint.advice.reason), findsOneWidget);
+          final beforeAssistance = container.read(gameProvider).session!;
+          final expected = beforeAssistance.rules.apply(
+            beforeAssistance.state,
+            hint.advice.move,
+          );
+          await tester.tap(
+            find.byTooltip('Jouer le meilleur coup (40 points)'),
+          );
+          await settle(tester);
+          final assisted = container.read(gameProvider);
+          expect(assisted.session!.state.toJson(), expected.toJson());
+          expect(assisted.session!.assistedMovesUsed, 1);
+          expect(assisted.session!.hintsUsed, beforeAssistance.hintsUsed);
+          expect(assisted.hint, isNull);
+          expect(find.text(hint.advice.instruction), findsNothing);
+          expect(find.byType(SnackBar), findsNothing);
           expect(tester.takeException(), isNull);
 
           // Menu de partie.
@@ -177,7 +207,8 @@ void main() {
         .flipped(true);
     final state = deal.withPiles([
       Pile(PileRef.stock),
-      for (var i = 0; i < 7; i++) Pile(PileRef.tableau(i), i == 0 ? [king] : const []),
+      for (var i = 0; i < 7; i++)
+        Pile(PileRef.tableau(i), i == 0 ? [king] : const []),
       Pile(const PileRef.foundation(0), suit(Suit.spades)),
       Pile(const PileRef.foundation(1), suit(Suit.hearts)),
       Pile(const PileRef.foundation(2), suit(Suit.diamonds)),
@@ -197,14 +228,17 @@ void main() {
     );
     addTearDown(container.dispose);
     await tester.pumpWidget(
-      UncontrolledProviderScope(container: container, child: const SoliNovaApp()),
+      UncontrolledProviderScope(
+        container: container,
+        child: const SoliNovaApp(),
+      ),
     );
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Continuer'), findsOneWidget);
     await tester.tap(find.text('Continuer'));
     await settle(tester);
-    expect(find.text('Terminer'), findsOneWidget);
-    await tester.tap(find.text('Terminer'));
+    expect(find.byTooltip('Terminer'), findsOneWidget);
+    await tester.tap(find.byTooltip('Terminer'));
     await settle(tester);
     await settle(tester);
     final game = container.read(gameProvider);
@@ -215,7 +249,10 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(container.read(profileProvider).stats.global.wins, 1);
     expect(container.read(profileProvider).wallet.balance, greaterThan(0));
-    await tester.drag(find.byType(SingleChildScrollView).last, const Offset(0, -2000));
+    await tester.drag(
+      find.byType(SingleChildScrollView).last,
+      const Offset(0, -2000),
+    );
     await settle(tester);
     expect(find.text('Rejouer'), findsOneWidget);
     expect(find.text('Accueil'), findsOneWidget);

@@ -19,7 +19,11 @@ class ScoringScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final body = TextStyle(fontSize: 15.5, height: 1.5, color: scheme.onSurface);
+    final body = TextStyle(
+      fontSize: 15.5,
+      height: 1.5,
+      color: scheme.onSurface,
+    );
     const sc = ScoreCalculator.victoryBonus;
 
     Widget para(String text) => Padding(
@@ -39,7 +43,10 @@ class ScoringScreen extends StatelessWidget {
                 children: [
                   Expanded(
                     flex: 3,
-                    child: Text(a, style: TextStyle(color: scheme.onSurfaceVariant)),
+                    child: Text(
+                      a,
+                      style: TextStyle(color: scheme.onSurfaceVariant),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Flexible(
@@ -93,11 +100,13 @@ class ScoringScreen extends StatelessWidget {
       ('Bonus de coups', '+${s.movesBonus}'),
       ('Bonus de série', '+${s.streakBonus}'),
       ('Pénalité indices', '-${s.hintPenalty}'),
+      ('Pénalité coups assistés', '-${s.assistedMovePenalty}'),
       ('Pénalité annulations', '-${s.undoPenalty}'),
       ('Score final', formatNumber(s.total)),
     ];
 
-    final xp1 = XpRules.winBase[GameMode.klondike1]! + ex1.total ~/ XpRules.scorePerXp;
+    final xp1 =
+        XpRules.winBase[GameMode.klondike1]! + ex1.total ~/ XpRules.scorePerXp;
     final pts1 = PointsRules.winBase + ex1.total ~/ PointsRules.scorePerPoint;
 
     return NovaPage(
@@ -114,11 +123,26 @@ class ScoringScreen extends StatelessWidget {
           'rapportent ou coûtent des points de jeu :',
         ),
         rows([
-          ('Carte posée en fondation (Klondike, FreeCell)', signed(LivePoints.toFoundation)),
-          ('Carte de la défausse vers le tableau (Klondike)', signed(LivePoints.wasteToTableau)),
-          ('Carte cachée retournée (Klondike, Spider)', signed(LivePoints.reveal)),
-          ('Carte reprise d\'une fondation (Klondike)', signed(LivePoints.foundationToTableau)),
-          ('Pioche remise en place, tirage 1 (Klondike)', signed(LivePoints.recycleDraw1)),
+          (
+            'Carte posée en fondation (Klondike, FreeCell)',
+            signed(LivePoints.toFoundation),
+          ),
+          (
+            'Carte de la défausse vers le tableau (Klondike)',
+            signed(LivePoints.wasteToTableau),
+          ),
+          (
+            'Carte cachée retournée (Klondike, Spider)',
+            signed(LivePoints.reveal),
+          ),
+          (
+            'Carte reprise d\'une fondation (Klondike)',
+            signed(LivePoints.foundationToTableau),
+          ),
+          (
+            'Pioche remise en place, tirage 1 (Klondike)',
+            signed(LivePoints.recycleDraw1),
+          ),
           ('Suite complète Roi → As (Spider)', signed(LivePoints.spiderSuite)),
         ]),
         const SizedBox(height: 8),
@@ -129,17 +153,29 @@ class ScoringScreen extends StatelessWidget {
         const SectionTitle('Bonus en cas de victoire'),
         rows([
           ('Bonus de victoire', '+$sc'),
-          ('Bonus de rapidité', '${ScoreCalculator.speedPerSecond} par seconde sous le temps de référence, max ${ScoreCalculator.speedMax}'),
-          ('Bonus de coups', '${ScoreCalculator.movesPerMove} par coup sous la référence, max ${ScoreCalculator.movesMax}'),
-          ('Bonus de série', '${ScoreCalculator.streakPerWin} par victoire consécutive précédente dans le mode, max ${ScoreCalculator.streakMax}'),
+          (
+            'Bonus de rapidité',
+            '${ScoreCalculator.speedPerSecond} par seconde sous le temps de référence, max ${ScoreCalculator.speedMax}',
+          ),
+          (
+            'Bonus de coups',
+            '${ScoreCalculator.movesPerMove} par coup sous la référence, max ${ScoreCalculator.movesMax}',
+          ),
+          (
+            'Bonus de série',
+            '${ScoreCalculator.streakPerWin} par victoire consécutive précédente dans le mode, max ${ScoreCalculator.streakMax}',
+          ),
         ]),
         const SectionTitle('Pénalités'),
         rows([
           ('Chaque indice utilisé', '-${ScoreCalculator.hintCost}'),
+          ('Chaque coup assisté', '-${ScoreCalculator.assistedMoveCost}'),
           ('Chaque annulation', '-${ScoreCalculator.undoCost}'),
         ]),
         const SizedBox(height: 8),
-        para('Le score ne descend jamais sous 0. Une défaite ne reçoit aucun bonus.'),
+        para(
+          'Le score ne descend jamais sous 0. Une défaite ne reçoit aucun bonus.',
+        ),
         const SectionTitle('Différences entre les modes'),
         rows([
           for (final m in GameMode.values)
@@ -175,7 +211,8 @@ class ScoringScreen extends StatelessWidget {
           '${XpRules.lossMinSeconds} secondes et ${XpRules.lossMinMoves} coups.',
         ),
         rows([
-          for (final m in GameMode.values) (m.fullName, '${XpRules.winBase[m]} XP'),
+          for (final m in GameMode.values)
+            (m.fullName, '${XpRules.winBase[m]} XP'),
         ]),
         const SizedBox(height: 8),
         para(
@@ -200,7 +237,9 @@ class ScoringScreen extends StatelessWidget {
             (d.label, '${d.rewardXp} XP et ${d.rewardPoints} points'),
         ]),
         const SizedBox(height: 8),
-        para('La récompense d\'un défi est versée une seule fois, à la première réussite.'),
+        para(
+          'La récompense d\'un défi est versée une seule fois, à la première réussite.',
+        ),
       ],
     );
   }

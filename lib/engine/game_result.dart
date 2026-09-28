@@ -11,6 +11,7 @@ final class GameResult {
     required this.elapsedMs,
     required this.moves,
     required this.hints,
+    this.assistedMoves = 0,
     required this.undos,
     required this.finishedAt,
     this.challengeId,
@@ -23,6 +24,8 @@ final class GameResult {
   final int elapsedMs;
   final int moves;
   final int hints;
+  final int assistedMoves;
+  bool get usedAssistance => hints > 0 || assistedMoves > 0;
   final int undos;
   final DateTime finishedAt;
   final String? challengeId;

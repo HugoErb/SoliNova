@@ -8,6 +8,7 @@ import '../engine/model/game_mode.dart';
 import '../engine/model/move.dart';
 import '../engine/model/pile.dart';
 import '../engine/rng/seeded_random.dart';
+import '../engine/rules/move_advisor.dart';
 import '../engine/scoring/score_calculator.dart';
 import '../engine/session/game_session.dart';
 import '../meta/daily/daily_challenge.dart';
@@ -18,11 +19,17 @@ import 'providers.dart';
 /// Indice affiché : cartes à déplacer et pile cible.
 @immutable
 final class HintInfo {
-  const HintInfo({required this.cardIds, this.target, required this.serial});
+  const HintInfo({
+    required this.cardIds,
+    this.target,
+    required this.serial,
+    required this.advice,
+  });
 
   final Set<int> cardIds;
   final PileRef? target;
   final int serial;
+  final MoveAdvice advice;
 }
 
 /// État observé par l'écran de jeu.
@@ -259,10 +266,7 @@ class GameController extends Notifier<GameViewState> {
   void _startSession(GameSession session) {
     _autoToken++;
     _resetClock(session.elapsedMs);
-    state = GameViewState(
-      session: session,
-      dealSerial: state.dealSerial + 1,
-    );
+    state = GameViewState(session: session, dealSerial: state.dealSerial + 1);
     _saver.schedule(session);
     _updateClock();
   }
@@ -279,19 +283,30 @@ class GameController extends Notifier<GameViewState> {
   // Coups.
 
   /// Tente un coup du joueur ; renvoie faux s'il est refusé.
-  bool play(Move move, {Set<int> rejectCards = const {}}) {
+  bool play(
+    Move move, {
+    Set<int> rejectCards = const {},
+    bool assisted = false,
+  }) {
     final s = state.session;
     if (s == null || state.paused || state.autoPlaying) return false;
-    final next = s.play(move);
+    final next = assisted ? s.playAssisted(move) : s.play(move);
     if (next == null) {
       reject(rejectCards);
       return false;
     }
     _emitFor(s, move);
+    if (assisted) _autoToken++;
     state = state.copyWith(session: next, clearHint: true);
     _updateClock();
     _persist();
-    _afterMove();
+    if (assisted) {
+      // Une pression joue exactement un coup, même si l'automatisme des
+      // fondations est activé. Le coût est déjà présent en cas de victoire.
+      if (next.isWon) _finishWin();
+    } else {
+      _afterMove();
+    }
     return true;
   }
 
@@ -340,7 +355,7 @@ class GameController extends Notifier<GameViewState> {
       final next = s.playAuto(move);
       if (next == null) return;
       _fx.emit(FeedbackEvent.foundation);
-      state = state.copyWith(session: next);
+      state = state.copyWith(session: next, clearHint: true);
       _persist();
       if (next.isWon) {
         _finishWin();
@@ -387,16 +402,24 @@ class GameController extends Notifier<GameViewState> {
     _persist();
   }
 
-  /// Montre un coup valide sans le jouer.
+  MoveAdvice? _advice(GameSession session) =>
+      MoveAdvisor.best(session.rules, session.state, history: session.history);
+
+  /// Explique le meilleur coup estimé sans le jouer.
   void hint() {
     final s = state.session;
     if (s == null || state.paused || state.autoPlaying || s.isWon) return;
-    final moves = s.rules.hintMoves(s.state);
-    if (moves.isEmpty) {
-      _messages.add('Aucun mouvement utile. Essaie Annuler ou une nouvelle partie.');
+    final advice = _advice(s);
+    if (advice == null) {
+      clearHint();
+      _messages.add(
+        'Aucun mouvement utile. Essaie Annuler ou une nouvelle partie.',
+      );
       return;
     }
-    final move = moves.first;
+    final move = advice.move;
+    // Laisse le temps de lire l'indice avant tout nouveau déplacement.
+    _autoToken++;
     final Set<int> cards;
     PileRef? target;
     switch (move) {
@@ -408,19 +431,30 @@ class GameController extends Notifier<GameViewState> {
         final top = s.state.stock.top;
         cards = top == null ? const {} : {top.id};
         target = null;
-        if (s.mode.family == GameFamily.spider) {
-          _messages.add('Distribue une nouvelle rangée.');
-        }
       case RecycleMove():
         cards = const {};
         target = PileRef.stock;
-        _messages.add('Remets la défausse dans la pioche.');
     }
     state = state.copyWith(
       session: s.withHintUsed(),
-      hint: HintInfo(cardIds: cards, target: target, serial: ++_hintSerial),
+      hint: HintInfo(
+        cardIds: cards,
+        target: target,
+        serial: ++_hintSerial,
+        advice: advice,
+      ),
     );
     _persist();
+  }
+
+  /// Même suggestion que l'indice, jouée sans message ni surbrillance.
+  void playBestMove() {
+    final s = state.session;
+    if (s == null || state.paused || state.autoPlaying || s.isWon) return;
+    final advice = _advice(s);
+    clearHint();
+    if (advice == null) return;
+    play(advice.move, assisted: true);
   }
 
   void clearHint() {
@@ -507,6 +541,7 @@ class GameController extends Notifier<GameViewState> {
     return ScoreCalculator.live(
       gamePoints: s.state.points,
       hints: s.hintsUsed,
+      assistedMoves: s.assistedMovesUsed,
       undos: s.undoCount,
     );
   }

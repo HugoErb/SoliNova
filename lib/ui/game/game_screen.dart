@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/game_controller.dart';
 import '../../app/providers.dart';
 import '../../engine/model/game_mode.dart';
+import '../../engine/scoring/score_calculator.dart';
 import '../board/board_view.dart';
 import '../screens/new_game_sheet.dart';
 import '../screens/rules_screen.dart';
@@ -27,9 +28,10 @@ class GameScreen extends ConsumerStatefulWidget {
     transitionsBuilder: (context, a, b, child) => FadeTransition(
       opacity: CurvedAnimation(parent: a, curve: Curves.easeOutCubic),
       child: ScaleTransition(
-        scale: Tween(begin: 0.97, end: 1.0).animate(
-          CurvedAnimation(parent: a, curve: Curves.easeOutCubic),
-        ),
+        scale: Tween(
+          begin: 0.97,
+          end: 1.0,
+        ).animate(CurvedAnimation(parent: a, curve: Curves.easeOutCubic)),
         child: child,
       ),
     ),
@@ -137,7 +139,28 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                   Expanded(
                     child: session == null
                         ? const SizedBox.shrink()
-                        : const BoardView(),
+                        : LayoutBuilder(
+                            builder: (context, constraints) => Stack(
+                              children: [
+                                const Positioned.fill(child: BoardView()),
+                                if (game.hint case final hint?)
+                                  Positioned(
+                                    left: 12,
+                                    right: 12,
+                                    bottom: 8,
+                                    child: ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                        maxHeight: constraints.maxHeight * 0.45,
+                                      ),
+                                      child: _HintBanner(
+                                        hint: hint,
+                                        onClose: _controller.clearHint,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
                   ),
                   _ActionBar(
                     onNewGame: session == null
@@ -159,9 +182,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               Positioned.fill(
                 child: VictoryFx(key: ValueKey(game.report), look: look),
               ),
-              Positioned.fill(
-                child: VictorySheet(report: game.report!),
-              ),
+              Positioned.fill(child: VictorySheet(report: game.report!)),
             ],
           ],
         ),
@@ -195,7 +216,16 @@ Future<bool> confirmAbandon(BuildContext context) async {
   return ok ?? false;
 }
 
-enum _MenuChoice { pause, newGame, restart, changeMode, rules, settings, abandon, home }
+enum _MenuChoice {
+  pause,
+  newGame,
+  restart,
+  changeMode,
+  rules,
+  settings,
+  abandon,
+  home,
+}
 
 class _GameMenu extends StatelessWidget {
   const _GameMenu({required this.mode});
@@ -204,7 +234,12 @@ class _GameMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget item(IconData icon, String label, _MenuChoice c, {bool danger = false}) {
+    Widget item(
+      IconData icon,
+      String label,
+      _MenuChoice c, {
+      bool danger = false,
+    }) {
       final scheme = Theme.of(context).colorScheme;
       final color = danger ? scheme.error : scheme.onSurface;
       return ListTile(
@@ -228,17 +263,37 @@ class _GameMenu extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
               child: Text(
                 mode.fullName,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
             item(Icons.pause_rounded, 'Pause', _MenuChoice.pause),
-            item(Icons.replay_rounded, 'Recommencer cette donne', _MenuChoice.restart),
+            item(
+              Icons.replay_rounded,
+              'Recommencer cette donne',
+              _MenuChoice.restart,
+            ),
             item(Icons.add_rounded, 'Nouvelle partie', _MenuChoice.newGame),
-            item(Icons.style_rounded, 'Changer de mode', _MenuChoice.changeMode),
+            item(
+              Icons.style_rounded,
+              'Changer de mode',
+              _MenuChoice.changeMode,
+            ),
             item(Icons.menu_book_rounded, 'Règles du jeu', _MenuChoice.rules),
             item(Icons.tune_rounded, 'Paramètres', _MenuChoice.settings),
-            item(Icons.home_rounded, 'Accueil (la partie est gardée)', _MenuChoice.home),
-            item(Icons.flag_rounded, 'Abandonner', _MenuChoice.abandon, danger: true),
+            item(
+              Icons.home_rounded,
+              'Accueil (la partie est gardée)',
+              _MenuChoice.home,
+            ),
+            item(
+              Icons.flag_rounded,
+              'Abandonner',
+              _MenuChoice.abandon,
+              danger: true,
+            ),
           ],
         ),
       ),
@@ -269,7 +324,11 @@ class _Hud extends ConsumerWidget {
         value,
         Text(
           label,
-          style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            fontSize: 11,
+            color: scheme.onSurfaceVariant,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ],
     );
@@ -301,9 +360,15 @@ class _Hud extends ConsumerWidget {
                       if (settings.showScore)
                         stat(
                           'Score',
-                          Text(formatNumber(controller.liveScore), style: numStyle),
+                          Text(
+                            formatNumber(controller.liveScore),
+                            style: numStyle,
+                          ),
                         ),
-                      stat('Coups', Text('${session.moveCount}', style: numStyle)),
+                      stat(
+                        'Coups',
+                        Text('${session.moveCount}', style: numStyle),
+                      ),
                     ],
                   ),
           ),
@@ -321,6 +386,61 @@ class _Hud extends ConsumerWidget {
 }
 
 /// Actions principales en bas de l'écran.
+class _HintBanner extends StatelessWidget {
+  const _HintBanner({required this.hint, required this.onClose});
+
+  final HintInfo hint;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    final advice = hint.advice;
+    final points = advice.points;
+    return Material(
+      elevation: 6,
+      color: Theme.of(context).colorScheme.surfaceContainerHigh,
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 4, 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Semantics(
+                liveRegion: true,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      advice.instruction,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(advice.reason),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Coup : ${points > 0 ? '+' : ''}$points pts · '
+                      'Indice : −${ScoreCalculator.hintCost} pts',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            IconButton(
+              tooltip: "Fermer l'indice",
+              onPressed: onClose,
+              icon: const Icon(Icons.close_rounded),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Actions principales en bas de l'écran, avec libellés accessibles.
 class _ActionBar extends ConsumerWidget {
   const _ActionBar({required this.onNewGame});
 
@@ -332,6 +452,8 @@ class _ActionBar extends ConsumerWidget {
     final controller = ref.read(gameProvider.notifier);
     final session = game.session;
     final canUndo = session != null && session.canUndo && !game.autoPlaying;
+    final canAssist =
+        session != null && !session.isWon && !game.paused && !game.autoPlaying;
     final scheme = Theme.of(context).colorScheme;
 
     return Padding(
@@ -348,8 +470,23 @@ class _ActionBar extends ConsumerWidget {
           Expanded(
             child: _ActionButton(
               icon: Icons.lightbulb_outline_rounded,
-              label: 'Indice',
-              onTap: session == null || game.autoPlaying ? null : controller.hint,
+              label: 'Indice (${ScoreCalculator.hintCost} points)',
+              onTap: canAssist ? controller.hint : null,
+            ),
+          ),
+          Expanded(
+            child: _ActionButton(
+              icon: Icons.auto_fix_high_rounded,
+              label:
+                  'Jouer le meilleur coup (${ScoreCalculator.assistedMoveCost} points)',
+              onTap: canAssist
+                  ? () {
+                      ScaffoldMessenger.of(context)
+                        ..clearSnackBars()
+                        ..removeCurrentSnackBar();
+                      controller.playBestMove();
+                    }
+                  : null,
             ),
           ),
           Expanded(
@@ -366,7 +503,7 @@ class _ActionBar extends ConsumerWidget {
                   : _ActionButton(
                       key: const ValueKey('new'),
                       icon: Icons.add_rounded,
-                      label: 'Nouvelle',
+                      label: 'Nouvelle partie',
                       onTap: onNewGame,
                     ),
             ),
@@ -394,38 +531,14 @@ class _ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final enabled = onTap != null;
     final fg = highlight ?? scheme.onSurface;
-    return Semantics(
-      button: true,
-      enabled: enabled,
-      label: label,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: AnimatedOpacity(
-          duration: const Duration(milliseconds: 200),
-          opacity: enabled ? 1 : 0.35,
-          child: SizedBox(
-            height: 56,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, color: fg, size: 24),
-                const SizedBox(height: 3),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: fg,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    return IconButton(
+      tooltip: label,
+      onPressed: onTap,
+      color: fg,
+      disabledColor: fg.withValues(alpha: 0.35),
+      constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+      icon: Icon(icon, size: 26),
     );
   }
 }

@@ -34,6 +34,7 @@ final class GameSession {
     required List<Turn> turns,
     required this.moveCount,
     required this.hintsUsed,
+    required this.assistedMovesUsed,
     required this.undoCount,
     required this.elapsedMs,
     required this.challengeId,
@@ -51,6 +52,7 @@ final class GameSession {
       turns: const [],
       moveCount: 0,
       hintsUsed: 0,
+      assistedMovesUsed: 0,
       undoCount: 0,
       elapsedMs: 0,
       challengeId: challengeId,
@@ -69,6 +71,7 @@ final class GameSession {
   /// Annuler ne décrémente pas ce compteur).
   final int moveCount;
   final int hintsUsed;
+  final int assistedMovesUsed;
   final int undoCount;
   final int elapsedMs;
 
@@ -87,6 +90,7 @@ final class GameSession {
     List<Turn>? turns,
     int? moveCount,
     int? hintsUsed,
+    int? assistedMovesUsed,
     int? undoCount,
     int? elapsedMs,
   }) => GameSession._(
@@ -97,6 +101,7 @@ final class GameSession {
     turns: turns ?? this.turns,
     moveCount: moveCount ?? this.moveCount,
     hintsUsed: hintsUsed ?? this.hintsUsed,
+    assistedMovesUsed: assistedMovesUsed ?? this.assistedMovesUsed,
     undoCount: undoCount ?? this.undoCount,
     elapsedMs: elapsedMs ?? this.elapsedMs,
     challengeId: challengeId,
@@ -108,7 +113,10 @@ final class GameSession {
     return _copy(
       state: rules.apply(state, move),
       history: [...history, state],
-      turns: [...turns, Turn([move])],
+      turns: [
+        ...turns,
+        Turn([move]),
+      ],
       moveCount: moveCount + 1,
     );
   }
@@ -135,6 +143,10 @@ final class GameSession {
 
   GameSession withHintUsed() => _copy(hintsUsed: hintsUsed + 1);
 
+  /// Le coût reste comptabilisé après Annuler, comme celui d'un indice.
+  GameSession? playAssisted(Move move) =>
+      play(move)?._copy(assistedMovesUsed: assistedMovesUsed + 1);
+
   GameSession withElapsed(int ms) => _copy(elapsedMs: ms);
 
   /// Même donne, remise à zéro (« Recommencer »).
@@ -154,6 +166,7 @@ final class GameSession {
     'turns': [for (final t in turns) t.toJson()],
     'moves': moveCount,
     'hints': hintsUsed,
+    'assistedMoves': assistedMovesUsed,
     'undos': undoCount,
     'elapsed': elapsedMs,
     'challenge': challengeId,
@@ -202,6 +215,7 @@ final class GameSession {
       turns: turns,
       moveCount: json['moves']! as int,
       hintsUsed: json['hints']! as int,
+      assistedMovesUsed: json['assistedMoves'] as int? ?? 0,
       undoCount: json['undos']! as int,
       elapsedMs: json['elapsed']! as int,
       challengeId: json['challenge'] as String?,

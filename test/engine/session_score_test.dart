@@ -8,6 +8,22 @@ import 'package:solinova/engine/session/game_session.dart';
 
 void main() {
   group('GameSession', () {
+    test('coup assisté : coût sauvegardé et conservé après annulation', () {
+      final initial = GameSession.start(GameMode.klondike1, 8);
+      final session = initial.playAssisted(const DrawMove())!;
+      final restored = GameSession.fromJson(session.toJson());
+      expect(restored.assistedMovesUsed, 1);
+      expect(restored.moveCount, 1);
+      expect(restored.hintsUsed, 0);
+      final undone = restored.undo()!;
+      expect(undone.state.toJson(), initial.state.toJson());
+      expect(undone.assistedMovesUsed, 1);
+      expect(undone.restart().assistedMovesUsed, 0);
+      final legacy = initial.toJson()..remove('assistedMoves');
+      expect(GameSession.fromJson(legacy).assistedMovesUsed, 0);
+      expect(initial.playAssisted(const RecycleMove()), isNull);
+    });
+
     test('une partie ne commence qu\'au premier coup valide', () {
       final s = GameSession.start(GameMode.klondike1, 1);
       expect(s.started, isFalse);
@@ -105,6 +121,44 @@ void main() {
   });
 
   group('ScoreCalculator', () {
+    test(
+      'les deux aides ont des pénalités distinctes en direct et au bilan',
+      () {
+        expect(
+          ScoreCalculator.live(
+            gamePoints: 200,
+            hints: 2,
+            assistedMoves: 2,
+            undos: 0,
+          ),
+          80,
+        );
+        final score = ScoreCalculator.compute(
+          mode: GameMode.klondike1,
+          won: false,
+          gamePoints: 200,
+          elapsedMs: 0,
+          moves: 2,
+          hints: 2,
+          assistedMoves: 2,
+          undos: 0,
+          previousStreak: 0,
+        );
+        expect(score.hintPenalty, 40);
+        expect(score.assistedMovePenalty, 80);
+        expect(score.total, 80);
+        expect(
+          ScoreCalculator.live(
+            gamePoints: 0,
+            hints: 100,
+            assistedMoves: 100,
+            undos: 0,
+          ),
+          0,
+        );
+      },
+    );
+
     test('exemple Klondike tirage 1 documenté', () {
       final score = ScoreCalculator.compute(
         mode: GameMode.klondike1,
@@ -121,9 +175,9 @@ void main() {
       expect(score.speedBonus, 240); // (300 - 180) x 2
       expect(score.movesBonus, 100); // (130 - 110) x 5
       expect(score.streakBonus, 100); // 2 x 50
-      expect(score.hintPenalty, 25);
+      expect(score.hintPenalty, 20);
       expect(score.undoPenalty, 10);
-      expect(score.total, 700 + 500 + 240 + 100 + 100 - 25 - 10);
+      expect(score.total, 700 + 500 + 240 + 100 + 100 - 20 - 10);
     });
 
     test('bonus plafonnés et jamais négatifs', () {
@@ -170,18 +224,24 @@ void main() {
       expect(lost.total, 300);
     });
 
-    test('Spider 4 couleurs rapporte plus que 1 couleur à performance égale', () {
-      ScoreBreakdown s(GameMode m) => ScoreCalculator.compute(
-        mode: m,
-        won: true,
-        gamePoints: 900,
-        elapsedMs: 600000,
-        moves: 200,
-        hints: 0,
-        undos: 0,
-        previousStreak: 0,
-      );
-      expect(s(GameMode.spider4).total, greaterThan(s(GameMode.spider1).total));
-    });
+    test(
+      'Spider 4 couleurs rapporte plus que 1 couleur à performance égale',
+      () {
+        ScoreBreakdown s(GameMode m) => ScoreCalculator.compute(
+          mode: m,
+          won: true,
+          gamePoints: 900,
+          elapsedMs: 600000,
+          moves: 200,
+          hints: 0,
+          undos: 0,
+          previousStreak: 0,
+        );
+        expect(
+          s(GameMode.spider4).total,
+          greaterThan(s(GameMode.spider1).total),
+        );
+      },
+    );
   });
 }

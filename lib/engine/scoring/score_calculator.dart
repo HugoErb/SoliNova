@@ -28,6 +28,7 @@ final class ScoreBreakdown {
     required this.movesBonus,
     required this.streakBonus,
     required this.hintPenalty,
+    this.assistedMovePenalty = 0,
     required this.undoPenalty,
   });
 
@@ -38,6 +39,7 @@ final class ScoreBreakdown {
   final int movesBonus;
   final int streakBonus;
   final int hintPenalty;
+  final int assistedMovePenalty;
   final int undoPenalty;
 
   int get total {
@@ -49,6 +51,7 @@ final class ScoreBreakdown {
         movesBonus +
         streakBonus -
         hintPenalty -
+        assistedMovePenalty -
         undoPenalty;
     return raw < 0 ? 0 : raw;
   }
@@ -63,7 +66,8 @@ abstract final class ScoreCalculator {
   static const movesMax = 400;
   static const streakPerWin = 50;
   static const streakMax = 500;
-  static const hintCost = 25;
+  static const hintCost = 20;
+  static const assistedMoveCost = 40;
   static const undoCost = 5;
 
   static const Map<GameMode, ModeScoring> modes = {
@@ -103,9 +107,14 @@ abstract final class ScoreCalculator {
   static int live({
     required int gamePoints,
     required int hints,
+    int assistedMoves = 0,
     required int undos,
   }) {
-    final v = gamePoints - hints * hintCost - undos * undoCost;
+    final v =
+        gamePoints -
+        hints * hintCost -
+        assistedMoves * assistedMoveCost -
+        undos * undoCost;
     return v < 0 ? 0 : v;
   }
 
@@ -118,6 +127,7 @@ abstract final class ScoreCalculator {
     required int elapsedMs,
     required int moves,
     required int hints,
+    int assistedMoves = 0,
     required int undos,
     required int previousStreak,
   }) {
@@ -136,6 +146,7 @@ abstract final class ScoreCalculator {
           : 0,
       streakBonus: won ? clamp(previousStreak * streakPerWin, streakMax) : 0,
       hintPenalty: hints * hintCost,
+      assistedMovePenalty: assistedMoves * assistedMoveCost,
       undoPenalty: undos * undoCost,
     );
   }

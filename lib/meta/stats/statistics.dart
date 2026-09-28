@@ -21,6 +21,7 @@ final class ModeStats {
     this.timePlayedMs = 0,
     this.totalMoves = 0,
     this.hintsUsed = 0,
+    this.assistedMovesUsed = 0,
     this.undosUsed = 0,
   });
 
@@ -37,6 +38,7 @@ final class ModeStats {
   final int timePlayedMs;
   final int totalMoves;
   final int hintsUsed;
+  final int assistedMovesUsed;
   final int undosUsed;
 
   int get losses => games - wins;
@@ -63,6 +65,7 @@ final class ModeStats {
       timePlayedMs: timePlayedMs + r.elapsedMs,
       totalMoves: totalMoves + r.moves,
       hintsUsed: hintsUsed + r.hints,
+      assistedMovesUsed: assistedMovesUsed + r.assistedMoves,
       undosUsed: undosUsed + r.undos,
     );
   }
@@ -84,6 +87,7 @@ final class ModeStats {
     'timePlayed': timePlayedMs,
     'totalMoves': totalMoves,
     'hints': hintsUsed,
+    'assistedMoves': assistedMovesUsed,
     'undos': undosUsed,
   };
 
@@ -101,6 +105,7 @@ final class ModeStats {
     timePlayedMs: readInt(j, 'timePlayed'),
     totalMoves: readInt(j, 'totalMoves'),
     hintsUsed: readInt(j, 'hints'),
+    assistedMovesUsed: readInt(j, 'assistedMoves'),
     undosUsed: readInt(j, 'undos'),
   );
 }
@@ -153,7 +158,9 @@ final class Statistics {
     final after = before.record(r);
     final records = NewRecords(
       bestScore:
-          r.won && before.bestScore != null && after.bestScore! > before.bestScore!,
+          r.won &&
+          before.bestScore != null &&
+          after.bestScore! > before.bestScore!,
       bestTime:
           r.won &&
           before.bestTimeMs != null &&
@@ -213,8 +220,8 @@ final class Statistics {
       perMode: {
         for (final e in modes.entries)
           ?GameMode.tryParse(e.key): ModeStats.fromJson(
-              e.value is Map ? (e.value! as Map).cast<String, Object?>() : {},
-            ),
+            e.value is Map ? (e.value! as Map).cast<String, Object?>() : {},
+          ),
       },
       challengesFinished: readInt(j, 'challengesFinished'),
       challengesSucceeded: readInt(j, 'challengesSucceeded'),
