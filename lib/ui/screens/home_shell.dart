@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/game_controller.dart';
 import '../../app/providers.dart';
-import '../../engine/model/game_mode.dart';
 import '../../meta/daily/daily_challenge.dart';
 import '../game/game_screen.dart';
 import '../widgets/common.dart';
@@ -108,7 +107,7 @@ class HomeShellState extends ConsumerState<HomeShell> {
   }
 }
 
-/// Accueil : reprise, nouvelle partie, défis du jour, accès rapides.
+/// Accueil : reprise, nouvelle partie, encart des défis, accès rapides.
 class PlayTab extends ConsumerWidget {
   const PlayTab({super.key, required this.onOpenTab});
 
@@ -209,53 +208,10 @@ class PlayTab extends ConsumerWidget {
                 onPressed: () => showNewGameSheet(context, ref),
               ),
         const SizedBox(height: 28),
-        Row(
-          children: [
-            const Expanded(
-              child: Text(
-                'Défis du jour',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-              ),
-            ),
-            TextButton(
-              onPressed: () => onOpenTab(1),
-              child: const Text('Tout voir'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Panel(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Column(
-            children: [
-              for (final mode in GameMode.values)
-                ListTile(
-                  onTap: () {
-                    ref.read(challengeModeProvider.notifier).select(mode);
-                    onOpenTab(1);
-                  },
-                  title: Text(
-                    mode.fullName,
-                    style: const TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                  subtitle: Text(
-                    '${dailies.succeededOn(date, mode)} / 3 réussis',
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (final c in today)
-                        if (c.mode == mode)
-                          _StatusDot(status: dailies.of(c.id).status),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
+        _ChallengesTeaser(
+          done: dailies.succeededOn(date),
+          total: today.length,
+          onTap: () => onOpenTab(1),
         ),
         const SizedBox(height: 28),
         _QuickLinks(onOpenTab: onOpenTab),
@@ -325,32 +281,62 @@ class _QuickLinks extends StatelessWidget {
   }
 }
 
-/// Pastille d'état d'un défi.
-class _StatusDot extends StatelessWidget {
-  const _StatusDot({required this.status});
+/// Encart d'accueil vers la page des défis du jour.
+class _ChallengesTeaser extends StatelessWidget {
+  const _ChallengesTeaser({
+    required this.done,
+    required this.total,
+    required this.onTap,
+  });
 
-  final ChallengeStatus status;
+  final int done;
+  final int total;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return switch (status) {
-      ChallengeStatus.succeeded => Icon(
-        Icons.check_circle_rounded,
-        color: scheme.primary,
-        semanticLabel: 'Réussi',
+    final complete = done >= total;
+    return Panel(
+      onTap: onTap,
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: scheme.primary.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              complete ? Icons.emoji_events_rounded : Icons.today_rounded,
+              color: scheme.primary,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Défis du jour',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  complete
+                      ? 'Tous les défis sont réussis, bravo !'
+                      : '$done / $total réussis · 3 défis par mode',
+                  style: TextStyle(color: scheme.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
+        ],
       ),
-      ChallengeStatus.inProgress => Icon(
-        Icons.timelapse_rounded,
-        color: scheme.onSurface,
-        semanticLabel: 'En cours',
-      ),
-      ChallengeStatus.notStarted => Icon(
-        Icons.radio_button_unchecked_rounded,
-        color: scheme.onSurfaceVariant,
-        semanticLabel: 'À faire',
-      ),
-    };
+    );
   }
 }
 
