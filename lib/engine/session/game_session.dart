@@ -143,7 +143,7 @@ final class GameSession {
 
   GameSession withHintUsed() => _copy(hintsUsed: hintsUsed + 1);
 
-  /// Le coût reste comptabilisé après Annuler, comme celui d'un indice.
+  /// Le coup assisté reste comptabilisé après Annuler, comme un indice.
   GameSession? playAssisted(Move move) =>
       play(move)?._copy(assistedMovesUsed: assistedMovesUsed + 1);
 

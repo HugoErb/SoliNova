@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../engine/model/game_mode.dart';
-import '../../engine/scoring/score_calculator.dart';
 import '../widgets/common.dart';
 
 /// Section de règles.
@@ -147,9 +146,8 @@ const _common = [
         'explique le prochain coup d\'une suite gagnante calculée pour ta '
         'position. Chaque donne distribuée est gagnable. La baguette joue ce '
         'même coup automatiquement, '
-        'sans explication. Indice : ${ScoreCalculator.hintCost} points de score ; '
-        'coup assisté : ${ScoreCalculator.assistedMoveCost} points. '
-        'Ces deux aides sont illimitées, même à zéro point. '
+        'sans explication. Annuler, indice et coup assisté ne coûtent aucun '
+        'point de score et sont illimités. '
         'Elles empêchent de valider les objectifs et succès « sans indice ». '
         'Si tu t\'écartes du chemin et que la position est perdue, l\'aide '
         'te le dit : annule quelques coups.',

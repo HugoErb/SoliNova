@@ -139,9 +139,9 @@ void main() {
           expect(tester.takeException(), isNull);
           expectNoHorizontalScroll(tester);
           expect(find.byTooltip('Annuler'), findsOneWidget);
-          expect(find.byTooltip('Indice (20 points)'), findsOneWidget);
+          expect(find.byTooltip('Indice'), findsOneWidget);
           expect(
-            find.byTooltip('Jouer le meilleur coup (40 points)'),
+            find.byTooltip('Jouer le meilleur coup'),
             findsOneWidget,
           );
           expect(find.text('Annuler'), findsNothing);
@@ -157,7 +157,7 @@ void main() {
           await settle(tester);
           expect(container.read(gameProvider).session!.undoCount, 1);
 
-          await tester.tap(find.byTooltip('Indice (20 points)'));
+          await tester.tap(find.byTooltip('Indice'));
           await settle(tester);
           expect(tester.takeException(), isNull);
           final hint = container.read(gameProvider).hint!;
@@ -169,7 +169,7 @@ void main() {
             hint.advice.move,
           );
           await tester.tap(
-            find.byTooltip('Jouer le meilleur coup (40 points)'),
+            find.byTooltip('Jouer le meilleur coup'),
           );
           await settle(tester);
           final assisted = container.read(gameProvider);

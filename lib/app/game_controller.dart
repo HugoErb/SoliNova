@@ -358,7 +358,7 @@ class GameController extends Notifier<GameViewState> {
     _persist();
     if (assisted) {
       // Une pression joue exactement un coup, même si l'automatisme des
-      // fondations est activé. Le coût est déjà présent en cas de victoire.
+      // fondations est activé.
       if (next.isWon) _finishWin();
     } else {
       _afterMove();
@@ -664,15 +664,10 @@ class GameController extends Notifier<GameViewState> {
     );
   }
 
-  /// Score affiché en direct (points de jeu moins pénalités).
+  /// Score affiché en direct (points de jeu).
   int get liveScore {
     final s = state.session;
     if (s == null) return 0;
-    return ScoreCalculator.live(
-      gamePoints: s.state.points,
-      hints: s.hintsUsed,
-      assistedMoves: s.assistedMovesUsed,
-      undos: s.undoCount,
-    );
+    return ScoreCalculator.live(gamePoints: s.state.points);
   }
 }

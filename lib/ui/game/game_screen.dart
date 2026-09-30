@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/game_controller.dart';
 import '../../app/providers.dart';
 import '../../engine/model/game_mode.dart';
-import '../../engine/scoring/score_calculator.dart';
 import '../board/board_view.dart';
 import '../screens/new_game_sheet.dart';
 import '../screens/rules_screen.dart';
@@ -564,11 +563,6 @@ class _HintBanner extends StatelessWidget {
                               scheme.secondaryContainer,
                               scheme.onSecondaryContainer,
                             ),
-                          chip(
-                            'Indice −${ScoreCalculator.hintCost} pts',
-                            scheme.tertiaryContainer,
-                            scheme.onTertiaryContainer,
-                          ),
                         ],
                       ),
                     ],
@@ -623,7 +617,7 @@ class _ActionBar extends ConsumerWidget {
           Expanded(
             child: _ActionButton(
               icon: Icons.lightbulb_outline_rounded,
-              label: 'Indice (${ScoreCalculator.hintCost} points)',
+              label: 'Indice',
               busy: game.thinking == Assist.hint,
               onTap: canAssist ? controller.hint : null,
             ),
@@ -631,8 +625,7 @@ class _ActionBar extends ConsumerWidget {
           Expanded(
             child: _ActionButton(
               icon: Icons.auto_fix_high_rounded,
-              label:
-                  'Jouer le meilleur coup (${ScoreCalculator.assistedMoveCost} points)',
+              label: 'Jouer le meilleur coup',
               busy: game.thinking == Assist.play,
               onTap: canAssist
                   ? () {

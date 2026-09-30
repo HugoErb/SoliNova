@@ -121,43 +121,10 @@ void main() {
   });
 
   group('ScoreCalculator', () {
-    test(
-      'les deux aides ont des pénalités distinctes en direct et au bilan',
-      () {
-        expect(
-          ScoreCalculator.live(
-            gamePoints: 200,
-            hints: 2,
-            assistedMoves: 2,
-            undos: 0,
-          ),
-          80,
-        );
-        final score = ScoreCalculator.compute(
-          mode: GameMode.klondike1,
-          won: false,
-          gamePoints: 200,
-          elapsedMs: 0,
-          moves: 2,
-          hints: 2,
-          assistedMoves: 2,
-          undos: 0,
-          previousStreak: 0,
-        );
-        expect(score.hintPenalty, 40);
-        expect(score.assistedMovePenalty, 80);
-        expect(score.total, 80);
-        expect(
-          ScoreCalculator.live(
-            gamePoints: 0,
-            hints: 100,
-            assistedMoves: 100,
-            undos: 0,
-          ),
-          0,
-        );
-      },
-    );
+    test('score en direct = points de jeu, jamais négatif', () {
+      expect(ScoreCalculator.live(gamePoints: 200), 200);
+      expect(ScoreCalculator.live(gamePoints: -30), 0);
+    });
 
     test('exemple Klondike tirage 1 documenté', () {
       final score = ScoreCalculator.compute(
@@ -166,8 +133,6 @@ void main() {
         gamePoints: 700,
         elapsedMs: 180000,
         moves: 110,
-        hints: 1,
-        undos: 2,
         previousStreak: 2,
       );
       expect(score.victoryBonus, 500);
@@ -175,9 +140,7 @@ void main() {
       expect(score.speedBonus, 240); // (300 - 180) x 2
       expect(score.movesBonus, 100); // (130 - 110) x 5
       expect(score.streakBonus, 100); // 2 x 50
-      expect(score.hintPenalty, 20);
-      expect(score.undoPenalty, 10);
-      expect(score.total, 700 + 500 + 240 + 100 + 100 - 20 - 10);
+      expect(score.total, 700 + 500 + 240 + 100 + 100);
     });
 
     test('bonus plafonnés et jamais négatifs', () {
@@ -187,8 +150,6 @@ void main() {
         gamePoints: 0,
         elapsedMs: 0,
         moves: 1,
-        hints: 0,
-        undos: 0,
         previousStreak: 50,
       );
       expect(fast.speedBonus, ScoreCalculator.speedMax);
@@ -201,13 +162,11 @@ void main() {
         gamePoints: 0,
         elapsedMs: 99999000,
         moves: 9999,
-        hints: 100,
-        undos: 100,
         previousStreak: 0,
       );
       expect(slow.speedBonus, 0);
       expect(slow.movesBonus, 0);
-      expect(slow.total, 0);
+      expect(slow.total, ScoreCalculator.victoryBonus);
     });
 
     test('défaite : aucun bonus', () {
@@ -217,8 +176,6 @@ void main() {
         gamePoints: 300,
         elapsedMs: 1000,
         moves: 10,
-        hints: 0,
-        undos: 0,
         previousStreak: 5,
       );
       expect(lost.total, 300);
@@ -233,8 +190,6 @@ void main() {
           gamePoints: 900,
           elapsedMs: 600000,
           moves: 200,
-          hints: 0,
-          undos: 0,
           previousStreak: 0,
         );
         expect(

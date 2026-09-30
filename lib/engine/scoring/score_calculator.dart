@@ -27,9 +27,6 @@ final class ScoreBreakdown {
     required this.speedBonus,
     required this.movesBonus,
     required this.streakBonus,
-    required this.hintPenalty,
-    this.assistedMovePenalty = 0,
-    required this.undoPenalty,
   });
 
   final int gamePoints;
@@ -38,9 +35,6 @@ final class ScoreBreakdown {
   final int speedBonus;
   final int movesBonus;
   final int streakBonus;
-  final int hintPenalty;
-  final int assistedMovePenalty;
-  final int undoPenalty;
 
   int get total {
     final raw =
@@ -49,10 +43,7 @@ final class ScoreBreakdown {
         difficultyBonus +
         speedBonus +
         movesBonus +
-        streakBonus -
-        hintPenalty -
-        assistedMovePenalty -
-        undoPenalty;
+        streakBonus;
     return raw < 0 ? 0 : raw;
   }
 }
@@ -66,9 +57,6 @@ abstract final class ScoreCalculator {
   static const movesMax = 400;
   static const streakPerWin = 50;
   static const streakMax = 500;
-  static const hintCost = 20;
-  static const assistedMoveCost = 40;
-  static const undoCost = 5;
 
   static const Map<GameMode, ModeScoring> modes = {
     GameMode.klondike1: ModeScoring(
@@ -103,20 +91,10 @@ abstract final class ScoreCalculator {
     ),
   };
 
-  /// Score affiché pendant la partie : points de jeu moins pénalités.
-  static int live({
-    required int gamePoints,
-    required int hints,
-    int assistedMoves = 0,
-    required int undos,
-  }) {
-    final v =
-        gamePoints -
-        hints * hintCost -
-        assistedMoves * assistedMoveCost -
-        undos * undoCost;
-    return v < 0 ? 0 : v;
-  }
+  /// Score affiché pendant la partie : points de jeu. Annuler, indice et coup
+  /// assisté ne coûtent rien.
+  static int live({required int gamePoints}) =>
+      gamePoints < 0 ? 0 : gamePoints;
 
   /// Score final. [previousStreak] = victoires consécutives dans ce mode
   /// avant cette partie.
@@ -126,9 +104,6 @@ abstract final class ScoreCalculator {
     required int gamePoints,
     required int elapsedMs,
     required int moves,
-    required int hints,
-    int assistedMoves = 0,
-    required int undos,
     required int previousStreak,
   }) {
     final m = modes[mode]!;
@@ -145,9 +120,6 @@ abstract final class ScoreCalculator {
           ? clamp((m.referenceMoves - moves) * movesPerMove, movesMax)
           : 0,
       streakBonus: won ? clamp(previousStreak * streakPerWin, streakMax) : 0,
-      hintPenalty: hints * hintCost,
-      assistedMovePenalty: assistedMoves * assistedMoveCost,
-      undoPenalty: undos * undoCost,
     );
   }
 }

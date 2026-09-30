@@ -76,8 +76,6 @@ class ScoringScreen extends StatelessWidget {
       gamePoints: 700,
       elapsedMs: 180000,
       moves: 110,
-      hints: 1,
-      undos: 2,
       previousStreak: 2,
     );
     // Exemple 2 : Spider 4 couleurs.
@@ -87,8 +85,6 @@ class ScoringScreen extends StatelessWidget {
       gamePoints: 1150,
       elapsedMs: 1200000,
       moves: 300,
-      hints: 0,
-      undos: 4,
       previousStreak: 0,
     );
 
@@ -99,9 +95,6 @@ class ScoringScreen extends StatelessWidget {
       ('Bonus de rapidité', '+${s.speedBonus}'),
       ('Bonus de coups', '+${s.movesBonus}'),
       ('Bonus de série', '+${s.streakBonus}'),
-      ('Pénalité indices', '-${s.hintPenalty}'),
-      ('Pénalité coups assistés', '-${s.assistedMovePenalty}'),
-      ('Pénalité annulations', '-${s.undoPenalty}'),
       ('Score final', formatNumber(s.total)),
     ];
 
@@ -166,15 +159,11 @@ class ScoringScreen extends StatelessWidget {
             '${ScoreCalculator.streakPerWin} par victoire consécutive précédente dans le mode, max ${ScoreCalculator.streakMax}',
           ),
         ]),
-        const SectionTitle('Pénalités'),
-        rows([
-          ('Chaque indice utilisé', '-${ScoreCalculator.hintCost}'),
-          ('Chaque coup assisté', '-${ScoreCalculator.assistedMoveCost}'),
-          ('Chaque annulation', '-${ScoreCalculator.undoCost}'),
-        ]),
         const SizedBox(height: 8),
         para(
-          'Le score ne descend jamais sous 0. Une défaite ne reçoit aucun bonus.',
+          'Annuler, demander un indice ou jouer un coup assisté ne coûte aucun '
+          'point de score. Le score ne descend jamais sous 0. Une défaite ne '
+          'reçoit aucun bonus.',
         ),
         const SectionTitle('Différences entre les modes'),
         rows([
@@ -193,14 +182,14 @@ class ScoringScreen extends StatelessWidget {
         ),
         const SectionTitle('Exemple : Klondike tirage 1'),
         para(
-          'Victoire en 3 min et 110 coups, 700 points de jeu, 1 indice, '
-          '2 annulations, après 2 victoires d\'affilée.',
+          'Victoire en 3 min et 110 coups, 700 points de jeu, après 2 '
+          'victoires d\'affilée.',
         ),
         rows(breakdown(ex1)),
         const SectionTitle('Exemple : Spider 4 couleurs'),
         para(
-          'Victoire en 20 min et 300 coups, 1 150 points de jeu, aucun indice, '
-          '4 annulations, première victoire de la série.',
+          'Victoire en 20 min et 300 coups, 1 150 points de jeu, première '
+          'victoire de la série.',
         ),
         rows(breakdown(ex2)),
         const SectionTitle('XP'),

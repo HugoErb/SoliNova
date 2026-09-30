@@ -199,7 +199,7 @@ void main() {
     expect(container.read(gameProvider).hint, isNull);
   });
 
-  test('le coup gagnant inclut la pénalité dans le bilan', () async {
+  test('le coup gagnant assisté ne coûte aucun point au bilan', () async {
     final container = containerFor(
       board(
         GameMode.klondike1,
@@ -214,7 +214,16 @@ void main() {
     final report = container.read(gameProvider).report!;
     expect(report.result.won, isTrue);
     expect(report.result.assistedMoves, 1);
-    expect(report.result.score.assistedMovePenalty, 40);
+    final score = report.result.score;
+    expect(
+      score.total,
+      score.gamePoints +
+          score.victoryBonus +
+          score.difficultyBonus +
+          score.speedBonus +
+          score.movesBonus +
+          score.streakBonus,
+    );
     expect(report.result.hints, 0);
     expect(report.unlocked.map((a) => a.id), isNot(contains('no_hint')));
     await container.read(profileProvider.notifier).flush();
